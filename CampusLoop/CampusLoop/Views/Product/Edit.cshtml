@@ -1,0 +1,79 @@
+@model CampusLoop.Models.Product
+@{
+    ViewData["Title"] = "Edit Product (R.3.3)";
+    var categories = ViewBag.Categories as List<CampusLoop.Models.Category> ?? new();
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white p-4 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Product (R.3.3)</h5>
+                    <span class="text-muted small">Update your product listing details</span>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-semibold">Product Name</label>
+                                <input type="text" name="name" class="form-control" value="@Model.Name" required />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Category</label>
+                                <select name="categoryId" class="form-select" required>
+                                    @foreach (var cat in categories)
+                                    {
+                                        <option value="@cat.Id" selected="@(cat.Id == Model.CategoryId)">@cat.Name</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Price (₹ INR)</label>
+                                <input type="number" name="price" class="form-control" value="@Model.Price" required />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Condition</label>
+                                <select name="condition" class="form-select" required>
+                                    <option value="Like New" selected="@(Model.Condition == "Like New")">Like New</option>
+                                    <option value="Gently Used" selected="@(Model.Condition == "Gently Used")">Gently Used</option>
+                                    <option value="Good" selected="@(Model.Condition == "Good")">Good</option>
+                                    <option value="Fair" selected="@(Model.Condition == "Fair")">Fair</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Status (R.3.6)</label>
+                                <select name="status" class="form-select" required>
+                                    <option value="AVAILABLE" selected="@(Model.Status == "AVAILABLE")">AVAILABLE</option>
+                                    <option value="SOLD" selected="@(Model.Status == "SOLD")">SOLD</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Meeting Handover Location</label>
+                                <input type="text" name="campusLocation" class="form-control" value="@Model.CampusLocation" required />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Description</label>
+                                <textarea name="description" class="form-control" rows="4" required>@Model.Description</textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="MyProducts" class="btn btn-light rounded-3">Cancel</a>
+                            <button type="submit" class="btn btn-primary rounded-3 px-4 fw-bold">Update Product</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

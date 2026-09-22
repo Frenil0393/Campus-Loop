@@ -1,0 +1,100 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+<div class="container my-5 py-2">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="apple-form-card">
+                <div class="text-center mb-4">
+                    <span class="badge rounded-pill px-3 py-1 mb-2 fw-normal" style="background: rgba(0, 102, 204, 0.08); color: var(--apple-primary); font-size: 13px;">
+                        DDU Student Registration
+                    </span>
+                    <h2 class="fs-3 fw-semibold">Join CampusLoop</h2>
+                    <p class="text-muted" style="font-size: 14px;">
+                        Exclusively for Dharmsinh Desai University students.<br />
+                        <span class="text-primary fw-medium"><i class="bi bi-shield-check me-1"></i>Only @@ddu.ac.in emails are allowed to register.</span>
+                    </p>
+                </div>
+
+                <form asp-controller="Account" asp-action="Register" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 py-2 border-0 mb-3" style="font-size: 14px;"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label fw-semibold" style="font-size: 13px;">Full Name</label>
+                        <input asp-for="FullName" class="form-control apple-input" placeholder="e.g. Rahul Sharma" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label fw-semibold" style="font-size: 13px;">DDU Student Email (@@ddu.ac.in)</label>
+                            <input asp-for="Email" class="form-control apple-input" placeholder="e.g. student.ce24@ddu.ac.in" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold" style="font-size: 13px;">Phone Number</label>
+                            <input asp-for="PhoneNumber" class="form-control apple-input" placeholder="e.g. 9876543210" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-8">
+                            <label asp-for="Branch" class="form-label fw-semibold" style="font-size: 13px;">Branch / Department</label>
+                            <select asp-for="Branch" class="form-select apple-input">
+                                <option value="">Select Branch</option>
+                                <option value="Computer Engineering">Computer Engineering</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                                <option value="Electrical Engineering">Electrical Engineering</option>
+                                <option value="Electronics & Communication">Electronics & Communication</option>
+                                <option value="Chemical Engineering">Chemical Engineering</option>
+                                <option value="Other Department">Other Department</option>
+                            </select>
+                            <span asp-validation-for="Branch" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Semester" class="form-label fw-semibold" style="font-size: 13px;">Semester</label>
+                            <select asp-for="Semester" class="form-select apple-input">
+                                @for (int i = 1; i <= 8; i++)
+                                {
+                                    <option value="@i">Semester @i</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Semester" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label fw-semibold" style="font-size: 13px;">Password</label>
+                            <input asp-for="Password" class="form-control apple-input" placeholder="At least 6 characters" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold" style="font-size: 13px;">Confirm Password</label>
+                            <input asp-for="ConfirmPassword" class="form-control apple-input" placeholder="Re-enter password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-apple-primary w-100 justify-content-center py-2" style="font-size: 15px;">
+                        Create Student Account
+                    </button>
+                </form>
+
+                <div class="mt-4 pt-3 border-top text-center" style="font-size: 14px;">
+                    <span class="text-muted">Already registered on CampusLoop?</span>
+                    <a asp-controller="Account" asp-action="Login" class="apple-link ms-1 fw-semibold">Sign in here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

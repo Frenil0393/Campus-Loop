@@ -1,0 +1,58 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Sign In";
+}
+
+<div class="container my-5 py-3">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="apple-form-card text-center">
+                <i class="bi bi-person-circle fs-1 text-dark mb-2"></i>
+                <h2 class="fs-3 fw-semibold mb-1">Sign in with your College ID</h2>
+                <p class="text-muted mb-4" style="font-size: 15px;">Access CampusLoop to buy, sell, and chat with classmates.</p>
+
+                <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" class="text-start">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 py-2 border-0 mb-3" style="font-size: 14px;"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-semibold" style="font-size: 13px;">College Email</label>
+                        <input asp-for="Email" class="form-control apple-input" placeholder="e.g. rahul.sharma@college.edu" autofocus />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label fw-semibold" style="font-size: 13px;">Password</label>
+                        <input asp-for="Password" class="form-control apple-input" placeholder="Enter your password" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label text-muted" style="font-size: 14px;">Remember this device</label>
+                    </div>
+
+                    <button type="submit" class="btn-apple-primary w-100 justify-content-center py-2" style="font-size: 15px;">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="mt-4 pt-3 border-top text-center" style="font-size: 14px;">
+                    <span class="text-muted">Don't have a CampusLoop account?</span>
+                    <a asp-controller="Account" asp-action="Register" class="apple-link ms-1 fw-semibold">Register here</a>
+                </div>
+
+                <!-- Demo credentials hint for easy testing -->
+                <div class="mt-4 p-3 rounded-4 text-start" style="background-color: var(--apple-parchment); font-size: 12px; color: var(--apple-muted);">
+                    <div class="fw-semibold text-dark mb-1"><i class="bi bi-info-circle me-1"></i> Demo DDU Student Accounts:</div>
+                    <div><strong>Admin:</strong> admin@ddu.ac.in / Admin@123</div>
+                    <div><strong>Student 1:</strong> rahul.sharma@ddu.ac.in / Student@123</div>
+                    <div><strong>Student 2:</strong> priya.patel@ddu.ac.in / Student@123</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

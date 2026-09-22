@@ -1,0 +1,150 @@
+@model ProductDetailsViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container my-5">
+    <!-- Breadcrumb -->
+    <nav class="mb-4" style="font-size: 13px;">
+        <a asp-controller="Home" asp-action="Index" class="text-muted text-decoration-none">Marketplace</a>
+        <span class="mx-2 text-muted">/</span>
+        <span class="text-muted">@Model.CategoryName</span>
+        <span class="mx-2 text-muted">/</span>
+        <span class="text-dark fw-semibold text-truncate d-inline-block align-bottom" style="max-width: 250px;">@Model.Title</span>
+    </nav>
+
+    <div class="row g-5">
+        <!-- Image Gallery (Photography First) -->
+        <div class="col-lg-7">
+            <div class="p-3 rounded-4" style="background-color: var(--apple-parchment);">
+                <!-- Main Active Image -->
+                <div class="ratio ratio-4x3 rounded-3 overflow-hidden mb-3 bg-white shadow-sm d-flex align-items-center justify-content-center">
+                    <img id="mainGalleryImage" src="@(Model.ImageUrls.FirstOrDefault() ?? "/images/placeholder.svg")" 
+                         class="w-100 h-100 object-fit-contain" alt="@Model.Title" />
+                </div>
+
+                <!-- Thumbnails (3-4 images per R.14) -->
+                @if (Model.ImageUrls != null && Model.ImageUrls.Count > 1)
+                {
+                    <div class="d-flex gap-2 justify-content-center overflow-x-auto py-1">
+                        @for (int i = 0; i < Model.ImageUrls.Count; i++)
+                        {
+                            var img = Model.ImageUrls[i];
+                            <div class="rounded-3 overflow-hidden border @(i == 0 ? "border-primary" : "border-light") shadow-sm thumbnail-item" 
+                                 style="width: 80px; height: 60px; cursor: pointer;" 
+                                 onclick="document.getElementById('mainGalleryImage').src='@img'; document.querySelectorAll('.thumbnail-item').forEach(el => el.classList.remove('border-primary')); this.classList.add('border-primary');">
+                                <img src="@img" class="w-100 h-100 object-fit-cover" alt="Thumbnail" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Product Details & Seller Card -->
+        <div class="col-lg-5 d-flex flex-column">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-uppercase" style="font-size: 12px; font-weight: 600; color: var(--apple-muted); letter-spacing: 0.5px;">@Model.CategoryName</span>
+                    <span class="badge rounded-pill fw-normal px-3 py-1" style="font-size: 12px; @(Model.Status == ProductStatus.Available ? "background: #eaf5ea; color: #1e6424;" : "background: #fde8e8; color: #9b1c1c;")">
+                        @Model.Status
+                    </span>
+                </div>
+
+                <h1 class="fs-3 fw-bold mb-3">@Model.Title</h1>
+
+                <div class="mb-4">
+                    <span class="display-6 fw-bold text-dark">₹@Model.Price.ToString("N0")</span>
+                    <span class="text-muted ms-2" style="font-size: 14px;">Price negotiable via in-app chat</span>
+                </div>
+
+                <!-- Action CTAs -->
+                <div class="d-flex gap-2 mb-4">
+                    @if (Model.IsOwner)
+                    {
+                        <a asp-controller="Products" asp-action="Edit" asp-route-id="@Model.Id" class="btn-apple-outline flex-grow-1 justify-content-center py-2">
+                            <i class="bi bi-pencil me-1"></i> Edit Listing
+                        </a>
+                        @if (Model.Status == ProductStatus.Available)
+                        {
+                            <form asp-controller="Products" asp-action="MarkAsSold" asp-route-id="@Model.Id" method="post">
+                                <button type="submit" class="btn-apple-dark py-2 px-3" title="Mark as Sold">
+                                    <i class="bi bi-check2-circle me-1"></i> Mark as Sold
+                                </button>
+                            </form>
+                        }
+                    }
+                    else
+                    {
+                        @if (Model.Status == ProductStatus.Available)
+                        {
+                            <a asp-controller="Checkout" asp-action="Index" asp-route-id="@Model.Id" class="btn-apple-primary flex-grow-1 justify-content-center py-2 fs-6">
+                                <i class="bi bi-bag-check-fill me-1"></i> Direct Buy (₹@Model.Price.ToString("N0"))
+                            </a>
+                            <a asp-controller="Chat" asp-action="StartChat" asp-route-productId="@Model.Id" class="btn-apple-outline justify-content-center py-2 px-3 fs-6" title="Chat & Negotiate">
+                                <i class="bi bi-chat-dots me-1"></i> Chat
+                            </a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary rounded-pill flex-grow-1 py-2" disabled>
+                                Item Sold
+                            </button>
+                        }
+
+                        <form asp-controller="Wishlist" asp-action="Toggle" method="post">
+                            <input type="hidden" name="productId" value="@Model.Id" />
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                            <button type="submit" class="btn btn-light rounded-circle border shadow-sm p-0" style="width: 44px; height: 44px;" title="Wishlist">
+                                <i class="bi @(Model.IsInWishlist ? "bi-heart-fill text-danger" : "bi-heart text-muted") fs-5"></i>
+                            </button>
+                        </form>
+                    }
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4 pt-3 border-top">
+                    <h4 class="fs-6 fw-semibold text-dark mb-2">Item Overview</h4>
+                    <p class="text-muted" style="font-size: 15px; white-space: pre-line;">@Model.Description</p>
+                </div>
+            </div>
+
+            <!-- Seller Information Box (R.7.1) -->
+            <div class="mt-auto p-4 rounded-4" style="background-color: var(--apple-parchment);">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px;">
+                        <i class="bi bi-person fs-4 text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted" style="font-size: 11px; font-weight: 600; text-transform: uppercase;">Seller Information</div>
+                        <div class="fw-semibold text-dark fs-6">@Model.SellerName</div>
+                    </div>
+                </div>
+
+                <div class="row g-2 text-muted" style="font-size: 13px;">
+                    <div class="col-6">
+                        <i class="bi bi-mortarboard me-1"></i> @Model.SellerBranch
+                    </div>
+                    <div class="col-6">
+                        <i class="bi bi-calendar3 me-1"></i> Semester @Model.SellerSemester
+                    </div>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="col-6 text-truncate">
+                            <i class="bi bi-envelope me-1"></i> @Model.SellerEmail
+                        </div>
+                        <div class="col-6">
+                            <i class="bi bi-telephone me-1"></i> @Model.SellerPhone
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-12 mt-1">
+                            <a asp-controller="Account" asp-action="Login" class="apple-link" style="font-size: 12px;">Sign in to view contact details</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,105 @@
+@{
+    ViewData["Title"] = "Post Product for Sale (R.3.1)";
+    var categories = ViewBag.Categories as List<CampusLoop.Models.Category> ?? new();
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-gradient-primary text-white p-4 border-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="brand-icon-wrapper bg-white text-primary">
+                            <i class="bi bi-plus-lg fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">Post a Product for Sale (R.3.1)</h4>
+                            <span class="small text-white-50">Sell your unused calculators, books, drafters, or hostel items to batchmates</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-lg-5">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger rounded-3 small mb-4">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div><i class="bi bi-exclamation-circle-fill me-1"></i> @error.ErrorMessage</div>
+                            }
+                        </div>
+                    }
+
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-semibold">Product Name <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control" placeholder="e.g. Casio fx-991CW Scientific Calculator" required />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Category <span class="text-danger">*</span></label>
+                                <select name="categoryId" class="form-select" required>
+                                    <option value="" disabled selected>Select Category</option>
+                                    @foreach (var cat in categories)
+                                    {
+                                        <option value="@cat.Id">@cat.Name</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Price (₹ INR) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">₹</span>
+                                    <input type="number" name="price" class="form-control" placeholder="e.g. 850" min="10" required />
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Condition <span class="text-danger">*</span></label>
+                                <select name="condition" class="form-select" required>
+                                    <option value="Like New">Like New (Mint)</option>
+                                    <option value="Gently Used" selected>Gently Used</option>
+                                    <option value="Good">Good (Working fine)</option>
+                                    <option value="Fair">Fair</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Campus Handover Location <span class="text-danger">*</span></label>
+                                <input type="text" name="campusLocation" class="form-control" placeholder="e.g. Library Gate / Hostel B" required />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Description <span class="text-danger">*</span></label>
+                                <textarea name="description" class="form-control" rows="4" placeholder="Describe the item's condition, how many semesters it was used, included manuals/cables, etc." required></textarea>
+                            </div>
+
+                            <!-- 3-4 Images Upload (R.3.1 & R.14.1) -->
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold d-flex justify-content-between">
+                                    <span>Upload 3–4 Product Images (R.14.1) <span class="text-danger">*</span></span>
+                                    <span class="text-muted fs-8">Clear photos from multiple angles sell 3x faster</span>
+                                </label>
+                                <input type="file" name="imageFiles" class="form-control" multiple accept="image/*" id="productImageInput" />
+                                <div class="form-text fs-9">You can select multiple photos (hold Ctrl or Shift). Supported: JPG, PNG, WEBP.</div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a asp-action="MyProducts" class="btn btn-light rounded-3">Cancel</a>
+                            <button type="submit" class="btn btn-primary rounded-3 px-4 fw-bold shadow-xs">
+                                <i class="bi bi-cloud-upload-fill me-1"></i> Publish to Marketplace (R.3.1)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

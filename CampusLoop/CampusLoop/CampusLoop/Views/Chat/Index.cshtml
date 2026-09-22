@@ -1,0 +1,17 @@
+@model ChatRoomViewModel
+@{
+    ViewData["Title"] = "Messages";
+}
+
+<div class="container my-5 text-center py-5">
+    <div class="p-5 rounded-4 mx-auto" style="max-width: 500px; background-color: var(--apple-parchment);">
+        <i class="bi bi-chat-dots fs-1 text-muted mb-3 d-block"></i>
+        <h2 class="fs-4 fw-semibold mb-2">No Active Conversations</h2>
+        <p class="text-muted mb-4" style="font-size: 15px;">
+            Find a product on the marketplace and click "Chat & Negotiate Price" to connect directly with the seller.
+        </p>
+        <a asp-controller="Home" asp-action="Index" class="btn-apple-primary">
+            Explore Marketplace
+        </a>
+    </div>
+</div>

@@ -1,0 +1,98 @@
+@model List<MyPurchaseItemViewModel>
+@{
+    ViewData["Title"] = "My Purchases";
+}
+
+<div class="container my-5" style="max-width: 1040px;">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <span class="badge rounded-pill px-3 py-1 mb-2 fw-normal" style="background: rgba(0, 102, 204, 0.08); color: var(--apple-primary); font-size: 13px;">
+                Order History
+            </span>
+            <h1 class="fw-bold fs-2 mb-1" style="letter-spacing: -0.02em;">My Purchases</h1>
+            <p class="text-muted mb-0" style="font-size: 15px;">
+                Verified history of academic gear purchased from fellow DDU students.
+            </p>
+        </div>
+        <a asp-controller="Home" asp-action="Index" class="btn-apple-outline py-2 px-3">
+            <i class="bi bi-arrow-left me-1"></i> Browse Marketplace
+        </a>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="apple-card p-0 overflow-hidden shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 14px;">
+                    <thead class="bg-light text-muted" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <tr>
+                            <th class="ps-4 py-3">Academic Item</th>
+                            <th class="py-3">Transaction</th>
+                            <th class="py-3">Seller</th>
+                            <th class="py-3">Campus Handover</th>
+                            <th class="py-3">Amount</th>
+                            <th class="text-end pe-4 py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="@item.ImageUrl" alt="@item.ProductTitle" class="rounded-3 border object-fit-cover" style="width: 54px; height: 54px;" />
+                                        <div>
+                                            <div class="fw-semibold text-dark text-truncate" style="max-width: 220px;" title="@item.ProductTitle">
+                                                @item.ProductTitle
+                                            </div>
+                                            <div class="text-muted" style="font-size: 12px;">
+                                                @item.PurchasedAt.ToString("MMM dd, yyyy")
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    <span class="badge rounded-pill bg-light text-dark border font-monospace px-2 py-1" style="font-size: 11px;">
+                                        @item.TransactionId
+                                    </span>
+                                </td>
+                                <td class="py-3">
+                                    <span class="fw-medium text-dark">@item.SellerName</span>
+                                </td>
+                                <td class="py-3">
+                                    <span class="text-muted" style="font-size: 13px;">
+                                        <i class="bi bi-geo-alt text-danger me-1"></i>@item.PickupLocation
+                                    </span>
+                                </td>
+                                <td class="py-3">
+                                    <span class="fw-bold text-dark fs-6">₹@item.Amount.ToString("N0")</span>
+                                </td>
+                                <td class="text-end pe-4 py-3">
+                                    <a asp-controller="Checkout" asp-action="Receipt" asp-route-id="@item.OrderId" class="btn-apple-outline py-1 px-3" style="font-size: 12px;">
+                                        Receipt
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="apple-card text-center py-5">
+            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px;">
+                <i class="bi bi-bag-x fs-1 text-muted"></i>
+            </div>
+            <h3 class="fs-5 fw-bold mb-2">No purchases yet</h3>
+            <p class="text-muted mb-4" style="font-size: 15px; max-width: 440px; margin: 0 auto;">
+                When you buy academic gear directly on CampusLoop, your orders, receipts, and seller details will appear here.
+            </p>
+            <a asp-controller="Home" asp-action="Index" class="btn-apple-primary px-4 py-2">
+                Explore Marketplace
+            </a>
+        </div>
+    }
+</div>

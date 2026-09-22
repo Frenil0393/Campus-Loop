@@ -1,0 +1,104 @@
+@{
+    ViewData["Title"] = "Student Registration";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-gradient-primary text-white text-center p-4 border-0">
+                    <div class="brand-icon-wrapper mx-auto mb-2">
+                        <i class="bi bi-mortarboard-fill text-white fs-4"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">Student Registration (R.1.1)</h4>
+                    <p class="small text-white-50 mb-0">Join your college marketplace community</p>
+                </div>
+                <div class="card-body p-4 p-lg-5">
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger rounded-3 small mb-3">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i> @ViewBag.Error
+                        </div>
+                    }
+
+                    <form asp-action="Register" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" name="fullName" class="form-control" placeholder="e.g. Rahul Sharma" required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">College Email Address (DDU) <span class="text-danger">*</span></label>
+                                <input type="email" name="collegeEmail" class="form-control" placeholder="e.g. 24ceuos155@ddu.ac.in" required />
+                                <div class="form-text fs-9 text-muted">Use your Dharmsinh Desai University ID (e.g. 24ceuos155@ddu.ac.in)</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" name="phoneNumber" class="form-control" placeholder="e.g. +91 98765 43210" required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Branch / Department <span class="text-danger">*</span></label>
+                                <select name="branch" class="form-select" required>
+                                    <option value="" disabled selected>Select Branch</option>
+                                    <option value="Computer Engineering">Computer Engineering</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                    <option value="Electrical Engineering">Electrical Engineering</option>
+                                    <option value="Electronics & Comm.">Electronics & Comm.</option>
+                                    <option value="Chemical Engineering">Chemical Engineering</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Semester <span class="text-danger">*</span></label>
+                                <select name="semester" class="form-select" required>
+                                    <option value="" disabled selected>Select Semester</option>
+                                    <option value="1st Semester">1st Semester</option>
+                                    <option value="2nd Semester">2nd Semester</option>
+                                    <option value="3rd Semester">3rd Semester</option>
+                                    <option value="4th Semester">4th Semester</option>
+                                    <option value="5th Semester">5th Semester</option>
+                                    <option value="6th Semester">6th Semester</option>
+                                    <option value="7th Semester">7th Semester</option>
+                                    <option value="8th Semester">8th Semester</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+                                <input type="password" name="confirmPassword" class="form-control" placeholder="Repeat password" required />
+                            </div>
+                        </div>
+
+                        <div class="form-check mt-3 mb-4 small">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required checked>
+                            <label class="form-check-label text-muted" for="termsCheck">
+                                I agree to follow on-campus exchange safety rules & guidelines.
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 fw-bold shadow-xs mb-3">
+                            <i class="bi bi-person-plus-fill me-1"></i> Complete Registration
+                        </button>
+                    </form>
+
+                    <div class="text-center small text-muted">
+                        Already have an account? 
+                        <a asp-action="Login" class="text-primary fw-bold text-decoration-none">Sign In</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

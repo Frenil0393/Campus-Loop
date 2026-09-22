@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="container my-5 text-center">
+    <div class="card border-0 shadow-sm rounded-4 p-5 max-w-500 mx-auto">
+        <div class="display-1 text-danger mb-3"><i class="bi bi-shield-x"></i></div>
+        <h3 class="fw-bold">Access Denied (R.13)</h3>
+        <p class="text-muted">You do not have administrative privileges to access this protected portal.</p>
+        <div>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill px-4">Back to Home</a>
+        </div>
+    </div>
+</div>

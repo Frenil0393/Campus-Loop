@@ -1,0 +1,77 @@
+@model ProductCreateViewModel
+@{
+    ViewData["Title"] = "Sell an Item";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="apple-form-card">
+                <div class="text-center mb-4">
+                    <span class="badge rounded-pill px-3 py-1 mb-2 fw-normal" style="background: rgba(0,0,0,0.06); color: var(--apple-ink); font-size: 13px;">
+                        New Marketplace Listing
+                    </span>
+                    <h2 class="fs-3 fw-semibold">List an Item for Sale</h2>
+                    <p class="text-muted" style="font-size: 15px;">Turn your unused college gear into cash for fellow students.</p>
+                </div>
+
+                <form asp-controller="Products" asp-action="Create" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-4 py-2 border-0 mb-3" style="font-size: 14px;"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-semibold" style="font-size: 13px;">Item Title</label>
+                        <input asp-for="Title" class="form-control apple-input" placeholder="e.g. Casio FX-991EX Scientific Calculator" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CategoryId" class="form-label fw-semibold" style="font-size: 13px;">Category</label>
+                            <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select apple-input">
+                                <option value="">Select Category</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Price" class="form-label fw-semibold" style="font-size: 13px;">Asking Price (₹)</label>
+                            <input asp-for="Price" class="form-control apple-input" placeholder="e.g. 500" type="number" step="10" />
+                            <span asp-validation-for="Price" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold" style="font-size: 13px;">Detailed Description</label>
+                        <textarea asp-for="Description" class="form-control apple-input" rows="4" placeholder="Condition, how many semesters used, included accessories, or reasons for selling..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <!-- 3-4 Images Requirement (R.14.1) -->
+                    <div class="mb-4 p-3 rounded-4" style="background-color: var(--apple-parchment);">
+                        <label asp-for="ImageFiles" class="form-label fw-semibold d-flex justify-content-between align-items-center" style="font-size: 13px;">
+                            <span>Product Images</span>
+                            <span class="badge bg-secondary-subtle text-secondary fw-normal">3 to 4 photos required</span>
+                        </label>
+                        <input asp-for="ImageFiles" class="form-control apple-input bg-white" type="file" multiple accept="image/*" />
+                        <div class="form-text mt-2" style="font-size: 12px; color: var(--apple-muted);">
+                            Upload clear photos of the item from different angles (front, back, accessories).
+                        </div>
+                        <span asp-validation-for="ImageFiles" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-apple-primary w-100 justify-content-center py-2 fs-6">
+                            Publish Listing
+                        </button>
+                        <a asp-controller="Products" asp-action="MyProducts" class="btn-apple-secondary w-50 justify-content-center py-2">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

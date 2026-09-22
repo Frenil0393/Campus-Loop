@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CampusLoop | Dharmsinh Desai University (DDU)</title>
+    
+    <!-- Google Fonts & Bootstrap Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Bootstrap CSS (Local & CDN fallbacks) -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- Self-Contained Direct HTML Stylesheet (Zero external CSS failure risk) -->
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #0f172a;
+            --font-family-base: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            color: #1e293b;
+            background-color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Typography & Utilities */
+        .fs-7 { font-size: 0.875rem !important; }
+        .fs-8 { font-size: 0.775rem !important; }
+        .fs-9 { font-size: 0.700rem !important; }
+        .fw-extrabold { font-weight: 800; }
+        .max-w-400 { max-width: 400px; }
+        .max-w-500 { max-width: 500px; }
+        .max-w-650 { max-width: 650px; }
+        .cursor-pointer { cursor: pointer; }
+        .shadow-xs { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04); }
+        .rounded-4 { border-radius: 1rem !important; }
+        .letter-spacing-2 { letter-spacing: 4px; }
+
+        /* Brand & Header */
+        .brand-icon-wrapper {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
+        }
+        .brand-icon-wrapper.small { width: 28px; height: 28px; font-size: 0.95rem; border-radius: 8px; }
+        .brand-title { font-size: 1.28rem; letter-spacing: -0.5px; }
+        .brand-subtitle { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+
+        /* Buttons & Badges */
+        .btn-primary { background-color: var(--primary-color) !important; border-color: var(--primary-color) !important; color: #fff !important; }
+        .btn-primary:hover, .btn-primary:focus { background-color: var(--primary-hover) !important; border-color: var(--primary-hover) !important; }
+        .btn-outline-primary { color: var(--primary-color) !important; border-color: var(--primary-color) !important; }
+        .btn-outline-primary:hover { background-color: var(--primary-color) !important; color: #fff !important; }
+        .bg-primary-subtle { background-color: #eef2ff !important; color: #4f46e5 !important; }
+        .bg-success-subtle { background-color: #ecfdf5 !important; color: #059669 !important; }
+        .bg-danger-subtle { background-color: #fef2f2 !important; color: #dc2626 !important; }
+        .bg-warning-subtle { background-color: #fffbeb !important; color: #d97706 !important; }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .hero-background-glow {
+            position: absolute;
+            top: -20%;
+            right: 10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+        }
+        .backdrop-blur { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        .stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+
+        /* Category Pills */
+        .category-scroll-container { overflow-x: auto; scrollbar-width: thin; }
+        .category-pills-row { min-width: max-content; }
+        .category-pill-btn {
+            background-color: #ffffff;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .category-pill-btn:hover { background-color: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
+        .category-pill-btn.active {
+            background-color: var(--primary-color) !important;
+            color: #ffffff !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+        .category-pill-btn.active .badge { background-color: rgba(255, 255, 255, 0.25) !important; color: #ffffff !important; }
+
+        /* Product Cards */
+        .product-card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            background-color: #ffffff;
+            border: 1px solid #edf2f7 !important;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 28px -6px rgba(15, 23, 42, 0.08), 0 8px 12px -4px rgba(15, 23, 42, 0.03) !important;
+        }
+        .product-img-wrapper { height: 210px; overflow: hidden; background-color: #f1f5f9; }
+        .product-img { height: 100%; width: 100%; object-fit: cover; transition: transform 0.35s ease; }
+        .product-card:hover .product-img { transform: scale(1.05); }
+
+        /* Wishlist button */
+        .wishlist-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; }
+        .wishlist-btn:hover { transform: scale(1.15); }
+        .wishlist-btn.active i { color: #ef4444 !important; }
+
+        /* Chat Message Bubbles */
+        .chat-msg .msg-bubble { max-width: 80%; word-break: break-word; line-height: 1.45; }
+        .chat-msg.sent .msg-bubble { background-color: var(--primary-color) !important; color: #ffffff; border-bottom-right-radius: 4px !important; }
+        .chat-msg.received .msg-bubble { background-color: #ffffff !important; color: #1e293b; border-bottom-left-radius: 4px !important; }
+
+        /* Payment & Handshake styles */
+        .payment-method-card { transition: all 0.2s ease; background-color: #fff; cursor: pointer; }
+        .payment-method-card:hover { border-color: var(--primary-color) !important; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Campus Banner -->
+    <div class="campus-top-bar py-1 px-3 bg-dark text-white text-center small d-flex justify-content-between align-items-center">
+        <div class="d-none d-md-flex align-items-center gap-2">
+            <span class="badge bg-primary text-white"><i class="bi bi-shield-check me-1"></i> Dharmsinh Desai University (DDU)</span>
+            <span class="text-white-50">DDU Student-to-student trusted marketplace with ₹0 platform fee</span>
+        </div>
+        <div class="mx-auto mx-md-0 d-flex align-items-center gap-2">
+            <i class="bi bi-geo-alt-fill text-warning"></i>
+            <span class="fw-semibold">DDU Nadiad Campus Hub</span>
+            <span class="text-white-50">| Cash / UPI on Physical Handover</span>
+        </div>
+        <div class="d-none d-lg-flex align-items-center gap-2 text-white-50">
+            @if (User.IsInRole("Admin"))
+            {
+                <span class="badge bg-warning text-dark"><i class="bi bi-shield-lock-fill me-1"></i> DDU Admin Logged In</span>
+            }
+            else
+            {
+                <span>Support: support@ddu.ac.in</span>
+            }
+        </div>
+    </div>
+
+    <!-- Main Navigation Header -->
+    <header class="sticky-top bg-white border-bottom shadow-sm">
+        <nav class="navbar navbar-expand-lg py-2">
+            <div class="container-fluid px-lg-4">
+                <!-- Brand Logo -->
+                <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" asp-controller="Home" asp-action="Index">
+                    <div class="brand-icon-wrapper">
+                        <i class="bi bi-arrow-repeat text-white"></i>
+                    </div>
+                    <div>
+                        <span class="brand-title fw-bold text-primary">Campus<span class="text-dark">Loop</span> <span class="badge bg-primary-subtle text-primary fs-8">DDU</span></span>
+                        <span class="d-block brand-subtitle text-muted">Dharmsinh Desai University</span>
+                    </div>
+                </a>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Navbar Links & Controls -->
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <!-- Quick Search in Navbar -->
+                    <form class="d-flex mx-auto my-2 my-lg-0 w-100 max-w-500" role="search" method="get" asp-controller="Home" asp-action="Index">
+                        <div class="input-group search-input-group w-100">
+                            <span class="input-group-text bg-light border-end-0 text-muted ps-3">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input class="form-control bg-light border-start-0 ps-1" type="search" name="search" placeholder="Search calculators, drafters, books, furniture..." aria-label="Search" />
+                            <button class="btn btn-primary px-3 fw-medium" type="submit">Search</button>
+                        </div>
+                    </form>
+
+                    <!-- User Actions -->
+                    <div class="d-flex align-items-center gap-2 gap-lg-3 mt-2 mt-lg-0 justify-content-end">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <!-- Sell Product Button (R.3.1) -->
+                            <a asp-controller="Product" asp-action="Create" class="btn btn-primary d-flex align-items-center gap-2 fw-semibold px-3 py-2 rounded-pill shadow-xs">
+                                <i class="bi bi-plus-circle-fill"></i>
+                                <span>Post Item</span>
+                            </a>
+
+                            <!-- Wishlist Indicator -->
+                            <a asp-controller="Product" asp-action="Wishlist" class="btn btn-light position-relative p-2 rounded-circle text-muted hover-icon" title="Your Wishlist">
+                                <i class="bi bi-heart-fill fs-5 text-danger"></i>
+                            </a>
+
+                            <!-- Chat Messages Inbox (R.6) -->
+                            <a asp-controller="Chat" asp-action="Index" class="btn btn-light position-relative p-2 rounded-circle text-muted hover-icon" title="Messages & Chat">
+                                <i class="bi bi-chat-dots-fill fs-5 text-primary"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle"></span>
+                            </a>
+
+                            <!-- Student / Admin Profile Dropdown (R.1.4, R.8) -->
+                            <div class="dropdown">
+                                <button class="btn btn-light d-flex align-items-center gap-2 py-1 px-2 rounded-pill border dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="@(User.FindFirst("AvatarUrl")?.Value ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100")" alt="User" class="rounded-circle avatar-img" width="34" height="34">
+                                    <div class="text-start d-none d-xl-block pe-1">
+                                        <div class="fw-bold fs-7 lh-sm">@User.Identity.Name</div>
+                                        <div class="text-muted fs-8 lh-sm">@(User.IsInRole("Admin") ? "Campus Admin" : $"{User.FindFirst("Branch")?.Value} ({User.FindFirst("Semester")?.Value})")</div>
+                                    </div>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3 p-2">
+                                    <li class="px-2 py-1">
+                                        <span class="badge @(User.IsInRole("Admin") ? "bg-warning text-dark" : "bg-success-subtle text-success border border-success-subtle")">
+                                            Role: @(User.IsInRole("Admin") ? "Administrator" : "Student")
+                                        </span>
+                                        <div class="fw-semibold mt-1 fs-8">@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li><a class="dropdown-item rounded-2 py-2" asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-speedometer2 me-2 text-warning"></i> Admin Dashboard (R.12)</a></li>
+                                        <li><a class="dropdown-item rounded-2 py-2" asp-controller="Admin" asp-action="Students"><i class="bi bi-people me-2 text-primary"></i> Manage Students (R.9)</a></li>
+                                        <li><a class="dropdown-item rounded-2 py-2" asp-controller="Admin" asp-action="Products"><i class="bi bi-box-seam me-2 text-success"></i> Manage Products (R.10)</a></li>
+                                        <li><a class="dropdown-item rounded-2 py-2" asp-controller="Admin" asp-action="Categories"><i class="bi bi-tags me-2 text-info"></i> Manage Categories (R.11)</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    }
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="Account" asp-action="Profile"><i class="bi bi-person me-2 text-primary"></i> My Profile (R.1.4)</a></li>
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="Product" asp-action="MyProducts"><i class="bi bi-box me-2 text-info"></i> My Listings (R.3.2)</a></li>
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="Payment" asp-action="Orders"><i class="bi bi-card-checklist me-2 text-success"></i> My Orders & Handshake OTPs (R.15)</a></li>
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="Product" asp-action="Wishlist"><i class="bi bi-heart me-2 text-danger"></i> My Wishlist</a></li>
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="Chat" asp-action="Index"><i class="bi bi-chat-left-text me-2 text-primary"></i> Messages (R.6)</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a asp-controller="Account" asp-action="Logout" class="dropdown-item rounded-2 py-2 text-danger fw-bold">
+                                            <i class="bi bi-box-arrow-right me-2"></i> Logout (R.1.3)
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- Direct 1-Click Logout Button (Always Visible in Navbar) -->
+                            <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 fw-bold d-flex align-items-center gap-1 shadow-xs" title="Logout from CampusLoop">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Logout</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary rounded-pill px-3 py-1 fw-semibold">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                            </a>
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-primary rounded-pill px-3 py-1 fw-semibold shadow-xs">
+                                <i class="bi bi-person-plus me-1"></i> Register
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Global Flash Notification Messages -->
+    <div class="container-fluid px-lg-5 mt-3">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-xs" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-xs" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["Info"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show rounded-3 shadow-xs" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i> @TempData["Info"]
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+
+    <!-- Main Content Container -->
+    <div class="flex-grow-1">
+        @RenderBody()
+    </div>
+
+    <!-- College Footer -->
+    <footer class="bg-white border-top mt-5 pt-4 pb-3">
+        <div class="container-fluid px-lg-5">
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="brand-icon-wrapper small">
+                            <i class="bi bi-arrow-repeat text-white"></i>
+                        </div>
+                        <span class="brand-title fw-bold text-primary fs-5">Campus<span class="text-dark">Loop</span></span>
+                    </div>
+                    <p class="text-muted small">
+                        College student marketplace empowering students to buy and sell textbooks, calculators, drafters, instruments, and hostel essentials cleanly and affordably.
+                    </p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge bg-light text-dark border"><i class="bi bi-code-slash text-primary me-1"></i> ASP.NET Core MVC</span>
+                        <span class="badge bg-light text-dark border"><i class="bi bi-filetype-cs text-success me-1"></i> C# .NET 10</span>
+                        <span class="badge bg-light text-dark border"><i class="bi bi-database text-info me-1"></i> SQLite EF Core</span>
+                        <span class="badge bg-light text-dark border"><i class="bi bi-broadcast text-danger me-1"></i> SignalR Chat</span>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <h6 class="fw-bold mb-3">Browse Categories</h6>
+                    <ul class="list-unstyled small text-muted d-flex flex-column gap-2">
+                        <li><a asp-controller="Home" asp-action="Index" asp-route-category="tech" class="text-decoration-none text-muted">Calculators & Tech</a></li>
+                        <li><a asp-controller="Home" asp-action="Index" asp-route-category="drafting" class="text-decoration-none text-muted">Drafting & Lab Gear</a></li>
+                        <li><a asp-controller="Home" asp-action="Index" asp-route-category="books" class="text-decoration-none text-muted">Textbooks & Notes</a></li>
+                        <li><a asp-controller="Home" asp-action="Index" asp-route-category="hostel" class="text-decoration-none text-muted">Hostel & Furniture</a></li>
+                        <li><a asp-controller="Home" asp-action="Index" asp-route-category="mobility" class="text-decoration-none text-muted">Bicycles & Commute</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <h6 class="fw-bold mb-3">Student Hub</h6>
+                    <ul class="list-unstyled small text-muted d-flex flex-column gap-2">
+                        <li><a asp-controller="Product" asp-action="Create" class="text-decoration-none text-muted">Post an Item (R.3.1)</a></li>
+                        <li><a asp-controller="Product" asp-action="MyProducts" class="text-decoration-none text-muted">My Listed Products (R.3.2)</a></li>
+                        <li><a asp-controller="Chat" asp-action="Index" class="text-decoration-none text-muted">Chat with Sellers (R.6)</a></li>
+                        <li><a asp-controller="Account" asp-action="Profile" class="text-decoration-none text-muted">Student Profile (R.1.4)</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3">
+                    <h6 class="fw-bold mb-3">Administration</h6>
+                    <p class="small text-muted mb-2">College administrators can monitor student registrations, moderate products, and manage categories.</p>
+                    <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-sm btn-outline-secondary w-100 rounded-pill">
+                        <i class="bi bi-speedometer2 me-1"></i> Admin Portal (R.12)
+                    </a>
+                </div>
+            </div>
+
+            <div class="border-top pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center small text-muted">
+                <div>&copy; 2026 CampusLoop &bull; Dharmsinh Desai University (DDU) &bull; Nadiad, Gujarat</div>
+                <div class="d-flex gap-3 mt-2 mt-md-0">
+                    <a asp-controller="Home" asp-action="Privacy" class="text-muted text-decoration-none">Privacy Policy</a>
+                    <span>&bull;</span>
+                    <a href="javascript:void(0)" class="text-muted text-decoration-none">Campus Safety Guidelines</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap and jQuery Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- SignalR JavaScript Client for Real-Time Chat (R.6) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    
+    <!-- Custom CampusLoop JavaScript -->
+    <script src="~/js/marketplace.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
