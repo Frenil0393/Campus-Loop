@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
-  <rect width="400" height="300" fill="#1e293b" rx="12" />
-  <circle cx="200" cy="130" r="45" fill="#334155" />
-  <!-- Camera / image icon -->
-  <path d="M 180 120 L 188 108 L 212 108 L 220 120 L 235 120 C 240 120 244 124 244 129 L 244 153 C 244 158 240 162 235 162 L 165 162 C 160 162 156 158 156 153 L 156 129 C 156 124 160 120 165 120 Z" fill="#64748b" />
-  <circle cx="200" cy="141" r="13" fill="#1e293b" stroke="#94a3b8" stroke-width="3" />
-  <text x="200" y="210" font-family="Arial, sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">No Image Available</text>
-</svg>
