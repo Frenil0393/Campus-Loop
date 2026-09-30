@@ -1,0 +1,247 @@
+@model CheckoutViewModel
+@{
+    ViewData["Title"] = "Demo Payment & Checkout";
+}
+
+<div class="container my-5">
+    <!-- Breadcrumb -->
+    <nav class="mb-4" style="font-size: 14px;">
+        <a asp-controller="Home" asp-action="Index" class="apple-link">Marketplace</a> / 
+        <a asp-controller="Products" asp-action="Details" asp-route-id="@Model.ProductId" class="apple-link">@Model.ProductTitle</a> / 
+        <span class="text-dark fw-semibold">Payment</span>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Payment Options Form -->
+        <div class="col-lg-7">
+            <div class="apple-form-card">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                    <div>
+                        <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-1 mb-1 fw-normal" style="font-size: 12px;">
+                            College Project Demo Payment
+                        </span>
+                        <h2 class="fs-4 fw-bold mb-0">Select Payment Method</h2>
+                    </div>
+                    <span class="fs-4 fw-bold text-primary">₹@Model.Price.ToString("N0")</span>
+                </div>
+
+                <form asp-controller="Checkout" asp-action="ProcessPayment" method="post" id="checkoutForm">
+                    <input type="hidden" asp-for="ProductId" />
+                    <input type="hidden" asp-for="ProductTitle" />
+                    <input type="hidden" asp-for="Price" />
+                    <input type="hidden" asp-for="SellerId" />
+                    <input type="hidden" asp-for="SellerName" />
+
+                    <!-- Payment Method Tabs -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" style="font-size: 13px;">Payment Method</label>
+                        <div class="row g-2">
+                            <div class="col-6 col-sm-3">
+                                <input type="radio" class="btn-check" name="PaymentMethod" id="pm_upi_qr" value="UpiQr" checked autocomplete="off" onchange="switchPaymentTab('qr')">
+                                <label class="btn btn-outline-secondary w-100 p-2 text-center rounded-3 h-100 d-flex flex-column align-items-center justify-content-center" for="pm_upi_qr" style="font-size: 13px;">
+                                    <i class="bi bi-qr-code-scan fs-4 text-primary mb-1"></i>
+                                    <span>UPI QR Code</span>
+                                </label>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <input type="radio" class="btn-check" name="PaymentMethod" id="pm_upi_id" value="UpiId" autocomplete="off" onchange="switchPaymentTab('upi_id')">
+                                <label class="btn btn-outline-secondary w-100 p-2 text-center rounded-3 h-100 d-flex flex-column align-items-center justify-content-center" for="pm_upi_id" style="font-size: 13px;">
+                                    <i class="bi bi-phone fs-4 text-success mb-1"></i>
+                                    <span>Enter UPI ID</span>
+                                </label>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <input type="radio" class="btn-check" name="PaymentMethod" id="pm_card" value="Card" autocomplete="off" onchange="switchPaymentTab('card')">
+                                <label class="btn btn-outline-secondary w-100 p-2 text-center rounded-3 h-100 d-flex flex-column align-items-center justify-content-center" for="pm_card" style="font-size: 13px;">
+                                    <i class="bi bi-credit-card fs-4 text-warning mb-1"></i>
+                                    <span>Card Details</span>
+                                </label>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <input type="radio" class="btn-check" name="PaymentMethod" id="pm_cash" value="Cash" autocomplete="off" onchange="switchPaymentTab('cash')">
+                                <label class="btn btn-outline-secondary w-100 p-2 text-center rounded-3 h-100 d-flex flex-column align-items-center justify-content-center" for="pm_cash" style="font-size: 13px;">
+                                    <i class="bi bi-cash-coin fs-4 text-info mb-1"></i>
+                                    <span>Cash Handover</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 1: UPI QR CODE -->
+                    <div id="tab_qr" class="payment-tab-content p-4 rounded-4 text-center mb-4" style="background: #fbfbfd; border: 1px solid #e5e5ea;">
+                        <h6 class="fw-bold mb-2">Scan & Pay via Any UPI App</h6>
+                        <p class="text-muted small mb-3">Google Pay, PhonePe, Paytm, BHIM, or Samsung Wallet</p>
+                        
+                        <div class="d-inline-block p-2 bg-white rounded-4 shadow-sm border mb-3" style="max-width: 260px;">
+                            <img src="/images/upi_qr.jpg" alt="UPI QR Code" class="img-fluid rounded-3" style="max-height: 280px; object-fit: contain;" />
+                        </div>
+
+                        <div class="text-muted small mb-2">
+                            <span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-person me-1"></i>Frenil Chetanbhai Vaghasia</span>
+                            <span class="badge bg-light text-dark border px-2 py-1 ms-1">frenilvaghasia393@pingpay</span>
+                        </div>
+
+                        <div class="mt-3 text-start">
+                            <label class="form-label fw-semibold small">UPI Reference / UTR Number (Optional for demo)</label>
+                            <input asp-for="UpiTransactionRef" class="form-control apple-input" placeholder="e.g. 423987162534" />
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: ENTER UPI ID -->
+                    <div id="tab_upi_id" class="payment-tab-content p-4 rounded-4 mb-4 d-none" style="background: #fbfbfd; border: 1px solid #e5e5ea;">
+                        <h6 class="fw-bold mb-2">Pay via UPI Virtual Private Address (VPA)</h6>
+                        <p class="text-muted small mb-3">Enter your UPI ID to request or authorize demo payment.</p>
+
+                        <div class="mb-3">
+                            <label asp-for="UpiId" class="form-label fw-semibold small">Your UPI ID</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-at"></i></span>
+                                <input asp-for="UpiId" class="form-control apple-input border-start-0" placeholder="e.g. student@oksbi or student@paytm" />
+                            </div>
+                            <span class="text-muted" style="font-size: 11px;">Supported: @@oksbi, @@okhdfcbank, @@paytm, @@pingpay, @@ybl, etc.</span>
+                        </div>
+
+                        <div class="d-flex gap-2 flex-wrap text-muted small mt-2">
+                            <span class="badge bg-white text-dark border p-2"><i class="bi bi-check2 text-success me-1"></i>GPay</span>
+                            <span class="badge bg-white text-dark border p-2"><i class="bi bi-check2 text-success me-1"></i>PhonePe</span>
+                            <span class="badge bg-white text-dark border p-2"><i class="bi bi-check2 text-success me-1"></i>Paytm</span>
+                            <span class="badge bg-white text-dark border p-2"><i class="bi bi-check2 text-success me-1"></i>BHIM</span>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: CARD DETAILS -->
+                    <div id="tab_card" class="payment-tab-content p-4 rounded-4 mb-4 d-none" style="background: #fbfbfd; border: 1px solid #e5e5ea;">
+                        <h6 class="fw-bold mb-2">Debit / Credit Card (Demo)</h6>
+                        <p class="text-muted small mb-3">Enter demo card credentials for testing.</p>
+
+                        <div class="mb-3">
+                            <label asp-for="CardHolderName" class="form-label fw-semibold small">Cardholder Name</label>
+                            <input asp-for="CardHolderName" class="form-control apple-input" placeholder="e.g. Rahul Sharma" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CardNumber" class="form-label fw-semibold small">Card Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-credit-card-2-front"></i></span>
+                                <input asp-for="CardNumber" class="form-control apple-input border-start-0" placeholder="4111 2222 3333 4444" maxlength="19" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label asp-for="CardExpiry" class="form-label fw-semibold small">Expiry (MM/YY)</label>
+                                <input asp-for="CardExpiry" class="form-control apple-input" placeholder="12/28" maxlength="5" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="CardCvv" class="form-label fw-semibold small">CVV</label>
+                                <input asp-for="CardCvv" class="form-control apple-input" placeholder="123" maxlength="4" type="password" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: CASH ON HANDOVER -->
+                    <div id="tab_cash" class="payment-tab-content p-4 rounded-4 mb-4 d-none" style="background: #fbfbfd; border: 1px solid #e5e5ea;">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-cash-stack text-success me-2"></i>Cash on Campus Handover</h6>
+                        <p class="text-muted small mb-2">Pay in physical cash when meeting the seller at the scheduled campus spot.</p>
+                        <div class="alert alert-info py-2 px-3 rounded-3 border-0 small mb-0">
+                            <i class="bi bi-info-circle me-1"></i> Submitting this will mark the item as reserved for you and send an instant order receipt.
+                        </div>
+                    </div>
+
+                    <!-- Campus Handover Spot -->
+                    <div class="mb-3">
+                        <label asp-for="PickupLocation" class="form-label fw-semibold" style="font-size: 13px;">Campus Handover Meeting Spot</label>
+                        <select asp-for="PickupLocation" class="form-select apple-input">
+                            <option value="DDU Central Library Foyer">DDU Central Library Foyer</option>
+                            <option value="College Canteen / Nescafe Area">College Canteen / Nescafe Area</option>
+                            <option value="Main Administrative Building Gate">Main Administrative Building Gate</option>
+                            <option value="Computer Engineering Department Lawn">Computer Engineering Department Lawn</option>
+                            <option value="Campus Main Entrance Porch">Campus Main Entrance Porch</option>
+                        </select>
+                        <span asp-validation-for="PickupLocation" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Additional Notes -->
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label fw-semibold" style="font-size: 13px;">Message for Seller (Optional)</label>
+                        <input asp-for="Notes" class="form-control apple-input" placeholder="e.g. Free after 3 PM lab" />
+                    </div>
+
+                    <button type="submit" class="btn-apple-primary w-100 justify-content-center py-3 fs-6 fw-semibold shadow-sm">
+                        <i class="bi bi-shield-check me-2"></i> Confirm & Complete Demo Payment (₹@Model.Price.ToString("N0"))
+                    </button>
+                    <p class="text-muted text-center small mt-2 mb-0">
+                        <i class="bi bi-lock me-1"></i> Simulated educational transaction for CampusLoop project scope.
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Order Summary Card -->
+        <div class="col-lg-5">
+            <div class="apple-form-card sticky-top" style="top: 20px;">
+                <h4 class="fs-5 fw-bold mb-3 pb-2 border-bottom">Order Summary</h4>
+                
+                <div class="d-flex gap-3 align-items-center mb-3">
+                    <img src="@Model.ImageUrl" alt="@Model.ProductTitle" class="rounded-3 border object-fit-cover" style="width: 80px; height: 80px;" />
+                    <div class="flex-grow-1 overflow-hidden">
+                        <span class="badge bg-light text-dark border mb-1" style="font-size: 11px;">@Model.CategoryName</span>
+                        <h6 class="fw-semibold mb-1 text-truncate">@Model.ProductTitle</h6>
+                        <span class="fs-6 fw-bold text-dark">₹@Model.Price.ToString("N0")</span>
+                    </div>
+                </div>
+
+                <div class="border-top pt-3 mb-3">
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span class="text-muted">Item Subtotal</span>
+                        <span class="fw-semibold">₹@Model.Price.ToString("N0")</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span class="text-muted">Campus Platform Fee</span>
+                        <span class="text-success fw-semibold">FREE (₹0)</span>
+                    </div>
+                    <div class="d-flex justify-content-between pt-2 border-top">
+                        <span class="fw-bold fs-6">Total Amount</span>
+                        <span class="fw-bold fs-5 text-primary">₹@Model.Price.ToString("N0")</span>
+                    </div>
+                </div>
+
+                <!-- Seller Details -->
+                <div class="p-3 rounded-4 mb-3" style="background-color: var(--apple-parchment);">
+                    <div class="text-muted small mb-1">Seller Information</div>
+                    <div class="fw-semibold text-dark"><i class="bi bi-person me-1"></i>@Model.SellerName</div>
+                    @if (!string.IsNullOrEmpty(Model.SellerPhone))
+                    {
+                        <div class="small text-muted"><i class="bi bi-telephone me-1"></i>@Model.SellerPhone</div>
+                    }
+                    <div class="small text-muted"><i class="bi bi-envelope me-1"></i>@Model.SellerEmail</div>
+                </div>
+
+                <div class="text-center">
+                    <a asp-controller="Chat" asp-action="StartChat" asp-route-productId="@Model.ProductId" class="apple-link small">
+                        <i class="bi bi-chat-dots me-1"></i> Chat with seller before paying
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchPaymentTab(type) {
+        document.getElementById('tab_qr').classList.add('d-none');
+        document.getElementById('tab_upi_id').classList.add('d-none');
+        document.getElementById('tab_card').classList.add('d-none');
+        document.getElementById('tab_cash').classList.add('d-none');
+
+        if (type === 'qr') {
+            document.getElementById('tab_qr').classList.remove('d-none');
+        } else if (type === 'upi_id') {
+            document.getElementById('tab_upi_id').classList.remove('d-none');
+        } else if (type === 'card') {
+            document.getElementById('tab_card').classList.remove('d-none');
+        } else if (type === 'cash') {
+            document.getElementById('tab_cash').classList.remove('d-none');
+        }
+    }
+</script>

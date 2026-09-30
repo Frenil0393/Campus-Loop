@@ -1,0 +1,109 @@
+@model OrderReceiptViewModel
+@{
+    ViewData["Title"] = "Payment Receipt";
+}
+
+<div class="container my-5 py-2">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <!-- Receipt Card -->
+            <div class="apple-form-card shadow-sm border p-4 p-md-5">
+                <div class="text-center mb-4 pb-3 border-bottom">
+                    <div class="d-inline-flex p-3 rounded-circle bg-success-subtle text-success mb-3">
+                        <i class="bi bi-check2-circle fs-1"></i>
+                    </div>
+                    <span class="badge rounded-pill bg-success-subtle text-success px-3 py-1 mb-2 fw-medium" style="font-size: 13px;">
+                        Payment Successful (Demo)
+                    </span>
+                    <h2 class="fs-3 fw-bold mb-1">Receipt & Handover Pass</h2>
+                    <p class="text-muted small mb-0">Transaction ID: <span class="fw-mono text-dark fw-semibold">@Model.TransactionId</span></p>
+                </div>
+
+                <!-- Product Summary -->
+                <div class="d-flex align-items-center gap-3 p-3 rounded-4 mb-4" style="background: #fbfbfd; border: 1px solid #ededf0;">
+                    <img src="@Model.ImageUrl" alt="@Model.ProductTitle" class="rounded-3 border object-fit-cover" style="width: 70px; height: 70px;" />
+                    <div class="flex-grow-1">
+                        <div class="text-muted small">Academic Item</div>
+                        <h5 class="fs-6 fw-bold mb-1">@Model.ProductTitle</h5>
+                        <span class="text-primary fw-bold">₹@Model.Amount.ToString("N0")</span>
+                    </div>
+                </div>
+
+                <!-- Details Grid -->
+                <div class="row g-3 mb-4" style="font-size: 14px;">
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Payment Method</div>
+                        <div class="fw-semibold text-dark">
+                            @if (Model.PaymentMethod == PaymentMethod.UpiQr)
+                            {
+                                <span><i class="bi bi-qr-code-scan text-primary me-1"></i>UPI QR Code</span>
+                            }
+                            else if (Model.PaymentMethod == PaymentMethod.UpiId)
+                            {
+                                <span><i class="bi bi-phone text-success me-1"></i>UPI ID</span>
+                            }
+                            else if (Model.PaymentMethod == PaymentMethod.Card)
+                            {
+                                <span><i class="bi bi-credit-card text-warning me-1"></i>Debit/Credit Card</span>
+                            }
+                            else
+                            {
+                                <span><i class="bi bi-cash text-info me-1"></i>Cash on Handover</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Date & Time</div>
+                        <div class="fw-semibold text-dark">@Model.PurchasedAt.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Campus Handover Spot</div>
+                        <div class="fw-semibold text-primary"><i class="bi bi-geo-alt-fill me-1"></i>@Model.PickupLocation</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Reference</div>
+                        <div class="fw-semibold text-dark">@(Model.PaymentReference ?? "Auto-Generated")</div>
+                    </div>
+                </div>
+
+                <!-- Seller Contact Section -->
+                <div class="p-3 rounded-4 mb-4" style="background-color: var(--apple-parchment);">
+                    <div class="text-muted small mb-1 fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Seller Contact Information</div>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <div class="fw-bold text-dark fs-6"><i class="bi bi-person me-1"></i>@Model.SellerName</div>
+                            @if (!string.IsNullOrEmpty(Model.SellerPhone))
+                            {
+                                <div class="small text-muted"><i class="bi bi-telephone me-1"></i>@Model.SellerPhone</div>
+                            }
+                            <div class="small text-muted"><i class="bi bi-envelope me-1"></i>@Model.SellerEmail</div>
+                        </div>
+                        <a asp-controller="Chat" asp-action="StartChat" asp-route-productId="@Model.ProductId" class="btn btn-sm btn-dark rounded-pill px-3 py-1">
+                            <i class="bi bi-chat-dots me-1"></i> Message Seller
+                        </a>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <div class="mb-4 small text-muted">
+                        <strong>Handover Note:</strong> @Model.Notes
+                    </div>
+                }
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2 justify-content-center flex-wrap pt-3 border-top">
+                    <button type="button" class="btn-apple-outline py-2 px-4" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> Print Receipt
+                    </button>
+                    <a asp-controller="Checkout" asp-action="MyPurchases" class="btn-apple-secondary py-2 px-4">
+                        <i class="bi bi-bag-check me-1"></i> My Purchases
+                    </a>
+                    <a asp-controller="Home" asp-action="Index" class="btn-apple-primary py-2 px-4">
+                        Marketplace
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,132 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Overview";
+    var recentProducts = ViewBag.RecentProducts as List<Product> ?? new List<Product>();
+}
+
+<div class="container my-5">
+    <!-- Apple Admin Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <span class="text-uppercase" style="font-size: 11px; font-weight: 600; color: var(--apple-muted); letter-spacing: 0.5px;">Control Panel</span>
+            <h1 class="fs-3 fw-bold mb-0">CampusLoop Administration</h1>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="Admin" asp-action="Students" class="btn-apple-secondary" style="font-size: 13px;">
+                <i class="bi bi-people"></i> Students
+            </a>
+            <a asp-controller="Admin" asp-action="Categories" class="btn-apple-secondary" style="font-size: 13px;">
+                <i class="bi bi-tags"></i> Categories
+            </a>
+            <a asp-controller="Admin" asp-action="Products" class="btn-apple-secondary" style="font-size: 13px;">
+                <i class="bi bi-box-seam"></i> Products
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Metric Tiles (R.12.1) -->
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3 mb-5">
+        <div class="col">
+            <div class="apple-metric-tile">
+                <div class="apple-metric-number">@Model.TotalStudents</div>
+                <div class="apple-metric-label"><i class="bi bi-people me-1"></i> Registered Students</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="apple-metric-tile">
+                <div class="apple-metric-number">@Model.TotalProducts</div>
+                <div class="apple-metric-label"><i class="bi bi-box-seam me-1"></i> Total Listings</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="apple-metric-tile">
+                <div class="apple-metric-number text-primary">@Model.AvailableProducts</div>
+                <div class="apple-metric-label"><i class="bi bi-check-circle me-1"></i> Available Now</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="apple-metric-tile">
+                <div class="apple-metric-number text-success">@Model.SoldProducts</div>
+                <div class="apple-metric-label"><i class="bi bi-bag-check me-1"></i> Sold Items</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="apple-metric-tile">
+                <div class="apple-metric-number text-dark">@Model.TotalCategories</div>
+                <div class="apple-metric-label"><i class="bi bi-tags me-1"></i> Categories</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Management Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="apple-card h-100 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="fs-5 fw-semibold mb-0">Student Accounts</h3>
+                    <i class="bi bi-person-badge fs-4 text-primary"></i>
+                </div>
+                <p class="text-muted small flex-grow-1">Inspect registered student profiles, verify college enrollments, and toggle account access.</p>
+                <a asp-controller="Admin" asp-action="Students" class="apple-link mt-2">Manage Students &rarr;</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="apple-card h-100 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="fs-5 fw-semibold mb-0">Marketplace Categories</h3>
+                    <i class="bi bi-tags-fill fs-4 text-primary"></i>
+                </div>
+                <p class="text-muted small flex-grow-1">Create and curate product categories used by students when posting new listings.</p>
+                <a asp-controller="Admin" asp-action="Categories" class="apple-link mt-2">Manage Categories &rarr;</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="apple-card h-100 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="fs-5 fw-semibold mb-0">Product Moderation</h3>
+                    <i class="bi bi-shield-check fs-4 text-primary"></i>
+                </div>
+                <p class="text-muted small flex-grow-1">Audit all active listings and remove prohibited or invalid academic items.</p>
+                <a asp-controller="Admin" asp-action="Products" class="apple-link mt-2">Moderate Listings &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Postings Table -->
+    <div class="apple-form-card p-4">
+        <h3 class="fs-5 fw-semibold mb-3">Recent Listings</h3>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 14px;">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Date Posted</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in recentProducts)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@p.Title</td>
+                            <td>₹@p.Price.ToString("N0")</td>
+                            <td>
+                                <span class="badge rounded-pill fw-normal @(p.Status == ProductStatus.Available ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger")">
+                                    @p.Status
+                                </span>
+                            </td>
+                            <td class="text-muted">@p.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td class="text-end">
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-light rounded-pill px-3">
+                                    Inspect
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

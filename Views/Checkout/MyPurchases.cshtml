@@ -1,0 +1,72 @@
+@model List<MyPurchaseItemViewModel>
+@{
+    ViewData["Title"] = "My Purchases";
+}
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <nav style="font-size: 13px;" class="mb-1">
+                <a asp-controller="Home" asp-action="Index" class="apple-link">Marketplace</a> / Purchases
+            </nav>
+            <h1 class="fs-3 fw-bold mb-0">My Purchases & Orders</h1>
+        </div>
+        <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
+            Total Orders: @Model.Count
+        </span>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="apple-form-card text-center py-5">
+            <i class="bi bi-bag-x fs-1 text-muted mb-3"></i>
+            <h4 class="fs-5 fw-semibold mb-2">No purchases yet</h4>
+            <p class="text-muted small mb-4">When you purchase an item via UPI or Card, your orders and receipts will appear here.</p>
+            <a asp-controller="Home" asp-action="Index" class="btn-apple-primary">Browse Marketplace</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var order in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="apple-product-card h-100 d-flex flex-column p-3">
+                        <div class="d-flex gap-3 align-items-center mb-3">
+                            <img src="@order.ImageUrl" alt="@order.ProductTitle" class="rounded-3 border object-fit-cover" style="width: 70px; height: 70px;" />
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h6 class="fw-bold mb-1 text-truncate">@order.ProductTitle</h6>
+                                <span class="fs-6 fw-bold text-primary">₹@order.Amount.ToString("N0")</span>
+                                <div class="text-muted" style="font-size: 11px;">@order.PurchasedAt.ToString("MMM dd, yyyy")</div>
+                            </div>
+                        </div>
+
+                        <div class="border-top pt-2 small text-muted mb-3 flex-grow-1">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Seller:</span>
+                                <span class="fw-semibold text-dark">@order.SellerName</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Pickup Spot:</span>
+                                <span class="text-truncate ms-2 text-dark" style="max-width: 170px;">@order.PickupLocation</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Txn ID:</span>
+                                <span class="fw-mono text-dark" style="font-size: 11px;">@order.TransactionId</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 border-top pt-2">
+                            <a asp-controller="Checkout" asp-action="Receipt" asp-route-id="@order.OrderId" class="btn-apple-secondary flex-grow-1 justify-content-center py-1 text-center" style="font-size: 13px;">
+                                View Receipt
+                            </a>
+                            <a asp-controller="Chat" asp-action="StartChat" asp-route-productId="@order.ProductId" class="btn-apple-outline px-3 py-1" title="Message Seller">
+                                <i class="bi bi-chat-dots"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

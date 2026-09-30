@@ -1,0 +1,245 @@
+@model ChatRoomViewModel
+@{
+    ViewData["Title"] = "Chat: " + Model.ProductTitle;
+}
+
+<div class="container my-4">
+    <div class="row g-0 apple-chat-container shadow-sm border rounded-4 overflow-hidden" style="height: 75vh; min-height: 520px;">
+        <!-- Left Pane: Conversations List -->
+        <div class="col-md-4 col-lg-4 border-end d-flex flex-column h-100" style="background-color: var(--apple-parchment);">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+                <div>
+                    <h2 class="fs-5 fw-bold mb-0">Messages</h2>
+                    <small class="text-muted" style="font-size: 12px;">CampusLoop Student Chat</small>
+                </div>
+                <a asp-controller="Home" asp-action="Index" class="apple-link" style="font-size: 13px;">Marketplace</a>
+            </div>
+
+            <div class="overflow-y-auto flex-grow-1">
+                @if (Model.AllConversations != null && Model.AllConversations.Any())
+                {
+                    @foreach (var c in Model.AllConversations)
+                    {
+                        var isActive = (c.ConversationId == Model.ConversationId);
+                        <a asp-controller="Chat" asp-action="Conversation" asp-route-id="@c.ConversationId" 
+                           class="d-flex align-items-center gap-3 p-3 text-decoration-none border-bottom transition-all @(isActive ? "bg-white shadow-sm" : "")"
+                           style="color: inherit;">
+                            <div class="rounded-3 overflow-hidden flex-shrink-0 border" style="width: 50px; height: 50px; background: #e2e8f0;">
+                                <img src="@c.ProductImageUrl" class="w-100 h-100 object-fit-cover" alt="@c.ProductTitle" />
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex justify-content-between align-items-baseline">
+                                    <h3 class="fs-6 fw-semibold text-dark text-truncate mb-0" style="max-width: 140px;">@c.OtherUserName</h3>
+                                    <small class="text-muted" style="font-size: 11px;">@c.LastMessageAt.ToLocalTime().ToString("MMM dd")</small>
+                                </div>
+                                <div class="text-muted text-truncate small">@c.ProductTitle</div>
+                                <div class="text-truncate small @(c.HasUnread ? "fw-bold text-dark" : "text-muted")" style="font-size: 12px;">
+                                    @c.LastMessage
+                                </div>
+                            </div>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="p-4 text-center text-muted" style="font-size: 14px;">
+                        No active conversations yet.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Right Pane: Active Chat Room -->
+        <div class="col-md-8 col-lg-8 d-flex flex-column h-100 bg-white">
+            <!-- Header: Product Summary Banner (R.6.5) -->
+            <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-light">
+                <div class="d-flex align-items-center gap-3 overflow-hidden">
+                    <div class="rounded-3 overflow-hidden border flex-shrink-0" style="width: 48px; height: 48px;">
+                        <img src="@Model.ProductImageUrl" class="w-100 h-100 object-fit-cover" alt="@Model.ProductTitle" />
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="d-flex align-items-center gap-2">
+                            <h3 class="fs-6 fw-bold text-dark text-truncate mb-0">@Model.ProductTitle</h3>
+                            <span class="badge rounded-pill fw-normal" style="font-size: 11px; @(Model.ProductStatus == ProductStatus.Available ? "background: #eaf5ea; color: #1e6424;" : "background: #fde8e8; color: #9b1c1c;")">
+                                @Model.ProductStatus
+                            </span>
+                        </div>
+                        <div class="small text-muted text-truncate">
+                            Price: <span class="fw-semibold text-dark">₹@Model.ProductPrice.ToString("N0")</span> &bull; 
+                            Chatting with: <span class="fw-medium text-dark">@Model.OtherUserName</span> (@Model.OtherUserBranch, Sem @Model.OtherUserSemester)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-shrink-0">
+                    <a asp-controller="Products" asp-action="Details" asp-route-id="@Model.ProductId" class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size: 12px;">
+                        View Item
+                    </a>
+                    @if (Model.ProductStatus == ProductStatus.Available && Model.OtherUserId != Model.CurrentUserId)
+                    {
+                        <a asp-controller="Checkout" asp-action="Index" asp-route-id="@Model.ProductId" class="btn btn-sm btn-apple-primary text-nowrap rounded-pill px-3" style="font-size: 12px;">
+                            <i class="bi bi-bag-check-fill me-1"></i> Buy Item
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Messages Stream (R.6.4) -->
+            <div id="messagesContainer" class="flex-grow-1 p-3 overflow-y-auto d-flex flex-column gap-2" style="background-color: #fafafc;">
+                @if (Model.Messages != null && Model.Messages.Any())
+                {
+                    @foreach (var msg in Model.Messages)
+                    {
+                        var isMine = msg.IsFromCurrentUser;
+                        <div class="d-flex flex-column @(isMine ? "align-items-end" : "align-items-start") message-item" data-id="@msg.Id">
+                            <div class="@(isMine ? "apple-chat-bubble-sent" : "apple-chat-bubble-received") shadow-sm">
+                                @msg.MessageText
+                            </div>
+                            <span class="text-muted mt-1 px-1" style="font-size: 11px;">
+                                @(isMine ? "You" : msg.SenderName) &bull; @msg.SentAt.ToLocalTime().ToString("hh:mm tt")
+                            </span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div id="noMessagesPlaceholder" class="text-center my-auto py-5 text-muted" style="font-size: 14px;">
+                        <i class="bi bi-chat-dots fs-1 d-block mb-2 text-primary opacity-50"></i>
+                        <div class="fw-semibold text-dark">Start the conversation!</div>
+                        Negotiate the price, ask about condition, or schedule campus pickup.
+                    </div>
+                }
+            </div>
+
+            <!-- Message Input Form (R.6.2 & R.6.3) -->
+            <div class="p-3 border-top bg-white">
+                <form id="chatForm" asp-controller="Chat" asp-action="SendMessage" method="post" class="d-flex gap-2 align-items-center">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="conversationId" value="@Model.ConversationId" />
+                    <input type="text" id="messageInput" name="messageText" class="form-control apple-input rounded-pill flex-grow-1" 
+                           placeholder="Type a message to negotiate or discuss..." autocomplete="off" required />
+                    <button type="submit" id="sendBtn" class="btn-apple-primary px-4 py-2 rounded-pill d-flex align-items-center">
+                        <i class="bi bi-send-fill me-1"></i> Send
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- SignalR Client Library (Local with CDN fallback) -->
+    <script src="~/lib/signalr/signalr.min.js"></script>
+    <script>
+        if (typeof signalR === "undefined") {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"><\/script>');
+        }
+    </script>
+    <script>
+        const conversationId = "@Model.ConversationId";
+        const currentUserId = "@Model.CurrentUserId";
+        const container = document.getElementById("messagesContainer");
+        const form = document.getElementById("chatForm");
+        const input = document.getElementById("messageInput");
+        const sendBtn = document.getElementById("sendBtn");
+
+        // Keep track of rendered message IDs to prevent duplicates
+        const renderedMessageIds = new Set();
+        document.querySelectorAll(".message-item").forEach(el => {
+            const id = el.getAttribute("data-id");
+            if (id) renderedMessageIds.add(parseInt(id));
+        });
+
+        // Scroll messages to bottom smoothly
+        function scrollToBottom() {
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+        scrollToBottom();
+
+        // Append message to UI instantly
+        function appendMessage(id, senderId, senderName, text, timeStr, isMine) {
+            if (id && renderedMessageIds.has(parseInt(id))) {
+                return; // Already rendered
+            }
+            if (id) {
+                renderedMessageIds.add(parseInt(id));
+            }
+
+            // Remove placeholder if present
+            const placeholder = document.getElementById("noMessagesPlaceholder");
+            if (placeholder) {
+                placeholder.remove();
+            }
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "d-flex flex-column " + (isMine ? "align-items-end" : "align-items-start") + " message-item";
+            if (id) wrapper.setAttribute("data-id", id);
+
+            const bubble = document.createElement("div");
+            bubble.className = (isMine ? "apple-chat-bubble-sent" : "apple-chat-bubble-received") + " shadow-sm";
+            bubble.textContent = text;
+
+            const timeMeta = document.createElement("span");
+            timeMeta.className = "text-muted mt-1 px-1";
+            timeMeta.style.fontSize = "11px";
+            timeMeta.textContent = (isMine ? "You" : senderName) + " • " + (timeStr || "Just now");
+
+            wrapper.appendChild(bubble);
+            wrapper.appendChild(timeMeta);
+            container.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        // Initialize SignalR Connection
+        let connection = null;
+        if (typeof signalR !== "undefined") {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .withAutomaticReconnect([0, 2000, 5000, 10000])
+                .build();
+
+            connection.on("ReceiveMessage", function (msg) {
+                if (msg.conversationId == conversationId) {
+                    const isMine = (msg.senderId === currentUserId);
+                    appendMessage(msg.id, msg.senderId, msg.senderName, msg.messageText, msg.sentAt, isMine);
+                }
+            });
+
+            connection.start().then(() => {
+                connection.invoke("JoinConversation", conversationId);
+            }).catch(err => {
+                console.warn("SignalR live connection warning (HTTP fallback active):", err);
+            });
+        }
+
+        // Instant send via AJAX with Zero Delay
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const text = input.value.trim();
+            if (!text) return;
+
+            const formData = new FormData(form);
+            input.value = "";
+            input.focus();
+
+            fetch("/Chat/SendMessage", {
+                method: "POST",
+                body: formData,
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    appendMessage(data.messageId, data.senderId, data.senderName, data.messageText, data.sentAt, true);
+                }
+            })
+            .catch(err => {
+                console.error("Error sending message:", err);
+                // Fallback to regular form submit if fetch fails
+                form.submit();
+            });
+        });
+    </script>
+}
