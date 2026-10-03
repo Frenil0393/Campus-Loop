@@ -113,6 +113,20 @@ public class ChatController : Controller
         if (unreadMessages.Any())
         {
             foreach (var msg in unreadMessages) msg.IsRead = true;
+        }
+
+        // Mark conversation notifications as read
+        var unreadNotifications = await _context.Notifications
+            .Where(n => n.UserId == currentUserId && n.ConversationId == id && !n.IsRead)
+            .ToListAsync();
+
+        if (unreadNotifications.Any())
+        {
+            foreach (var n in unreadNotifications) n.IsRead = true;
+        }
+
+        if (unreadMessages.Any() || unreadNotifications.Any())
+        {
             await _context.SaveChangesAsync();
         }
 
@@ -189,6 +203,36 @@ public class ChatController : Controller
         await _context.SaveChangesAsync();
 
         var sender = await _userManager.FindByIdAsync(currentUserId);
+        var otherUserId = (conv.BuyerId == currentUserId) ? conv.SellerId : conv.BuyerId;
+        var product = await _context.Products.FindAsync(conv.ProductId);
+        var senderName = sender?.FullName ?? "Student";
+        var productTitle = product?.Title ?? "item";
+        var notificationMessage = $"New message from {senderName} about {productTitle}";
+        var conversationUrl = Url.Action(nameof(Conversation), "Chat", new { id = conversationId }) ?? $"/Chat/Conversation/{conversationId}";
+
+        var existingNotification = await _context.Notifications
+            .FirstOrDefaultAsync(n => n.UserId == otherUserId && n.ConversationId == conversationId && !n.IsRead);
+
+        if (existingNotification != null)
+        {
+            existingNotification.Message = notificationMessage;
+            existingNotification.LinkUrl = conversationUrl;
+            existingNotification.CreatedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            var notification = new Notification
+            {
+                UserId = otherUserId,
+                Message = notificationMessage,
+                LinkUrl = conversationUrl,
+                IsRead = false,
+                ConversationId = conversationId,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(notification);
+        }
+        await _context.SaveChangesAsync();
 
         var timeFormatted = message.SentAt.ToLocalTime().ToString("hh:mm tt");
 

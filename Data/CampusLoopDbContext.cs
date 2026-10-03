@@ -18,6 +18,7 @@ public class CampusLoopDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<Order> Orders => Set<Order>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -133,6 +134,23 @@ public class CampusLoopDbContext : IdentityDbContext<ApplicationUser>
                 .IsUnique();
             entity.HasIndex(o => o.ProductId)
                 .IsUnique();
+        });
+
+        // Notification relationships & indexes
+        builder.Entity<Notification>(entity =>
+        {
+            entity.HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(n => n.Conversation)
+                .WithMany()
+                .HasForeignKey(n => n.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(n => n.UserId);
+            entity.HasIndex(n => n.ConversationId);
         });
     }
 }

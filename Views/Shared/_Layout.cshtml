@@ -35,6 +35,7 @@
             <div class="d-flex align-items-center gap-2">
                 @if (User.Identity?.IsAuthenticated == true)
                 {
+                    @await Component.InvokeAsync("NotificationBell")
                     <a asp-controller="Products" asp-action="Create" class="btn-apple-primary text-decoration-none" style="padding: 6px 14px; font-size: 13px;">
                         <i class="bi bi-plus-lg"></i> Post Item
                     </a>

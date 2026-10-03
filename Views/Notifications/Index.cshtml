@@ -1,0 +1,77 @@
+@model List<CampusLoop.Models.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <h1 class="fs-3 fw-bold mb-1">Notifications</h1>
+            <p class="text-muted mb-0" style="font-size: 15px;">Stay updated on messages and purchases of your items.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            @if (Model != null && Model.Any(n => !n.IsRead))
+            {
+                <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size: 13px;">
+                        <i class="bi bi-check2-all me-1"></i> Mark All as Read
+                    </button>
+                </form>
+            }
+            <a asp-controller="Home" asp-action="Index" class="apple-link">
+                <i class="bi bi-arrow-left me-1"></i> Marketplace
+            </a>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="apple-form-card text-center py-5">
+            <i class="bi bi-bell-slash fs-1 text-muted mb-3"></i>
+            <h4 class="fs-5 fw-semibold mb-2">No notifications yet</h4>
+            <p class="text-muted small mb-0">When someone messages you about a listing or purchases your item, notifications will appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-2">
+            @foreach (var item in Model)
+            {
+                <div class="card border rounded-4 p-3 transition-all @(!item.IsRead ? "bg-light border-primary-subtle shadow-sm" : "bg-white")">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div class="d-flex gap-3 align-items-center flex-grow-1">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 @(!item.IsRead ? "bg-primary text-white" : "bg-light text-muted border")" style="width: 38px; height: 38px;">
+                                @if (item.Message.Contains("bought", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <i class="bi bi-bag-check"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-chat-dots"></i>
+                                }
+                            </div>
+                            <div class="flex-grow-1">
+                                <a asp-controller="Notifications" asp-action="Open" asp-route-id="@item.Id" class="text-decoration-none @(!item.IsRead ? "fw-semibold text-dark" : "text-secondary")" style="font-size: 15px;">
+                                    @item.Message
+                                </a>
+                                <div class="text-muted small mt-1">
+                                    @item.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy • hh:mm tt")
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                            @if (!item.IsRead)
+                            {
+                                <span class="badge rounded-pill bg-primary" style="font-size: 11px;">New</span>
+                            }
+                            <a asp-controller="Notifications" asp-action="Open" asp-route-id="@item.Id" class="btn btn-sm btn-apple-secondary rounded-pill px-3 py-1" style="font-size: 13px;">
+                                View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

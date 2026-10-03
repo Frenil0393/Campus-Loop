@@ -1,0 +1,12 @@
+@model int
+
+<a asp-controller="Notifications" asp-action="Index" class="btn btn-sm btn-light rounded-pill border-0 p-0 text-dark position-relative d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;" title="Notifications">
+    <i class="bi bi-bell"></i>
+    @if (Model > 0)
+    {
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px; padding: 2px 5px;">
+            @(Model > 99 ? "99+" : Model)
+            <span class="visually-hidden">unread notifications</span>
+        </span>
+    }
+</a>

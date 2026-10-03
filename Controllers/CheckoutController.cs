@@ -145,6 +145,22 @@ public class CheckoutController : Controller
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
+
+            var buyer = await _userManager.FindByIdAsync(currentUserId);
+            var buyerName = buyer?.FullName ?? "A student";
+            var receiptUrl = Url.Action(nameof(Receipt), "Checkout", new { id = order.Id }) ?? $"/Checkout/Receipt/{order.Id}";
+            var notification = new Notification
+            {
+                UserId = product.SellerId,
+                Message = $"{buyerName} bought your item {product.Title}",
+                LinkUrl = receiptUrl,
+                IsRead = false,
+                ConversationId = null,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+
             await transaction.CommitAsync();
         }
         catch
