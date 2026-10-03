@@ -70,16 +70,24 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
         var context = services.GetRequiredService<CampusLoopDbContext>();
         await context.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "DATABASE MIGRATION ERROR: Failed to apply database migrations.");
+    }
+
+    try
+    {
         await DbSeeder.SeedAsync(services);
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while creating or seeding the database.");
+        logger.LogError(ex, "DATABASE SEEDING ERROR: Failed to seed the database.");
     }
 }
 

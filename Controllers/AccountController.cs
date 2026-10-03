@@ -48,13 +48,11 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // Enforce college/academic email requirement
+        // Enforce official DDU college email requirement (@ddu.ac.in only)
         var email = model.Email.Trim();
-        if (!email.EndsWith("@ddu.ac.in", StringComparison.OrdinalIgnoreCase) &&
-            !email.EndsWith(".ac.in", StringComparison.OrdinalIgnoreCase) &&
-            !email.EndsWith(".edu", StringComparison.OrdinalIgnoreCase))
+        if (!email.EndsWith("@ddu.ac.in", StringComparison.OrdinalIgnoreCase))
         {
-            ModelState.AddModelError("Email", "Please use an official college email address (e.g. @ddu.ac.in or .ac.in / .edu).");
+            ModelState.AddModelError("Email", "Registration is restricted to DDU students. You must use an official @ddu.ac.in email address.");
             return View(model);
         }
 
@@ -136,14 +134,11 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // Validate college email domain for students (admin accounts exempt)
+        // Validate official DDU college email requirement (@ddu.ac.in only)
         var loginEmail = model.Email.Trim();
-        if (!loginEmail.EndsWith("@ddu.ac.in", StringComparison.OrdinalIgnoreCase) &&
-            !loginEmail.EndsWith(".ac.in", StringComparison.OrdinalIgnoreCase) &&
-            !loginEmail.EndsWith(".edu", StringComparison.OrdinalIgnoreCase) &&
-            !loginEmail.StartsWith("admin@", StringComparison.OrdinalIgnoreCase))
+        if (!loginEmail.EndsWith("@ddu.ac.in", StringComparison.OrdinalIgnoreCase))
         {
-            ModelState.AddModelError(string.Empty, "Please enter your college email address.");
+            ModelState.AddModelError(string.Empty, "Please enter your official @ddu.ac.in college email address.");
             return View(model);
         }
 

@@ -25,7 +25,7 @@ public class CheckoutViewModel
     [MaxLength(100)]
     public string? UpiTransactionRef { get; set; }
 
-    // Card Fields (Demo only)
+    // Card Fields
     [MaxLength(19)]
     public string? CardNumber { get; set; }
 

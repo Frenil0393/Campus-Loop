@@ -1,6 +1,6 @@
 @model CheckoutViewModel
 @{
-    ViewData["Title"] = "Demo Payment & Checkout";
+    ViewData["Title"] = "Payment & Checkout";
 }
 
 <div class="container my-5">
@@ -90,7 +90,7 @@
                     <!-- TAB 2: ENTER UPI ID -->
                     <div id="tab_upi_id" class="payment-tab-content p-4 rounded-4 mb-4 d-none" style="background: #fbfbfd; border: 1px solid #e5e5ea;">
                         <h6 class="fw-bold mb-2">Pay via UPI Virtual Private Address (VPA)</h6>
-                        <p class="text-muted small mb-3">Enter your UPI ID to request or authorize demo payment.</p>
+                        <p class="text-muted small mb-3">Enter your UPI ID to request or authorize payment.</p>
 
                         <div class="mb-3">
                             <label asp-for="UpiId" class="form-label fw-semibold small">Your UPI ID</label>
@@ -111,8 +111,8 @@
 
                     <!-- TAB 3: CARD DETAILS -->
                     <div id="tab_card" class="payment-tab-content p-4 rounded-4 mb-4 d-none" style="background: #fbfbfd; border: 1px solid #e5e5ea;">
-                        <h6 class="fw-bold mb-2">Debit / Credit Card (Demo)</h6>
-                        <p class="text-muted small mb-3">Enter demo card credentials for testing.</p>
+                        <h6 class="fw-bold mb-2">Debit / Credit Card</h6>
+                        <p class="text-muted small mb-3">Enter your card credentials to complete payment.</p>
 
                         <div class="mb-3">
                             <label asp-for="CardHolderName" class="form-label fw-semibold small">Cardholder Name</label>

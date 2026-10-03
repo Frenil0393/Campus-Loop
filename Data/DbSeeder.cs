@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using CampusLoop.Models;
 
 namespace CampusLoop.Data;
@@ -11,6 +14,8 @@ public static class DbSeeder
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var context = serviceProvider.GetRequiredService<CampusLoopDbContext>();
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DbSeeder");
 
         // 1. Seed Roles
         string[] roles = { Roles.Admin, Roles.Student };
@@ -18,34 +23,59 @@ public static class DbSeeder
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
-                await roleManager.CreateAsync(new IdentityRole(role));
+                var roleResult = await roleManager.CreateAsync(new IdentityRole(role));
+                if (!roleResult.Succeeded)
+                {
+                    logger.LogError("Failed to create role {Role}: {Errors}", role, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                }
             }
         }
 
         // 2. Seed Admin User
-        var adminEmail = "admin@ddu.ac.in";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        if (adminUser == null)
+        var adminEmail = configuration["SeedAdmin:Email"] ?? "admin@ddu.ac.in";
+        var adminPassword = configuration["SeedAdmin:Password"];
+
+        if (string.IsNullOrWhiteSpace(adminPassword))
         {
-            adminUser = new ApplicationUser
+            logger.LogWarning("SeedAdmin:Password is missing in configuration. Skipping admin user creation.");
+        }
+        else
+        {
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            if (adminUser == null)
             {
-                UserName = adminEmail,
-                Email = adminEmail,
-                FullName = "System Administrator",
-                PhoneNumber = "9998887770",
-                Branch = "Administration",
-                Semester = 1,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            var result = await userManager.CreateAsync(adminUser, "Admin@123");
-            if (result.Succeeded)
+                adminUser = new ApplicationUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    FullName = "System Administrator",
+                    PhoneNumber = "9998887770",
+                    Branch = "Administration",
+                    Semester = 1,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                var result = await userManager.CreateAsync(adminUser, adminPassword);
+                if (result.Succeeded)
+                {
+                    var roleResult = await userManager.AddToRoleAsync(adminUser, Roles.Admin);
+                    if (!roleResult.Succeeded)
+                    {
+                        logger.LogError("Failed to add admin user to role {Role}: {Errors}", Roles.Admin, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                    }
+                }
+                else
+                {
+                    logger.LogError("Failed to create admin user {Email}: {Errors}", adminEmail, string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
+            }
+            else if (!await userManager.IsInRoleAsync(adminUser, Roles.Admin))
             {
                 await userManager.AddToRoleAsync(adminUser, Roles.Admin);
             }
         }
 
-        // 3. Seed Demo Students (@ddu.ac.in)
+        // 3. Seed Sample Students (@ddu.ac.in)
         var student1Email = "rahul.sharma@ddu.ac.in";
         var student1 = await userManager.FindByEmailAsync(student1Email);
         if (student1 == null)
@@ -66,6 +96,15 @@ public static class DbSeeder
             {
                 await userManager.AddToRoleAsync(student1, Roles.Student);
             }
+            else
+            {
+                logger.LogError("Failed to create student user {Email}: {Errors}", student1Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                student1 = null;
+            }
+        }
+        else if (!await userManager.IsInRoleAsync(student1, Roles.Student))
+        {
+            await userManager.AddToRoleAsync(student1, Roles.Student);
         }
 
         var student2Email = "priya.patel@ddu.ac.in";
@@ -88,6 +127,15 @@ public static class DbSeeder
             {
                 await userManager.AddToRoleAsync(student2, Roles.Student);
             }
+            else
+            {
+                logger.LogError("Failed to create student user {Email}: {Errors}", student2Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                student2 = null;
+            }
+        }
+        else if (!await userManager.IsInRoleAsync(student2, Roles.Student))
+        {
+            await userManager.AddToRoleAsync(student2, Roles.Student);
         }
 
         // 4. Seed Categories
@@ -106,7 +154,7 @@ public static class DbSeeder
             await context.SaveChangesAsync();
         }
 
-        // 5. Seed Sample Products (if none exist or update existing images)
+        // 5. Seed Sample Products (if sample products do not already exist)
         if (student1 != null && student2 != null)
         {
             var calcCat = await context.Categories.FirstOrDefaultAsync(c => c.Name == "Calculators");
@@ -115,7 +163,8 @@ public static class DbSeeder
             var draftCat = await context.Categories.FirstOrDefaultAsync(c => c.Name == "Drafting & Lab Equipment");
             var furnCat = await context.Categories.FirstOrDefaultAsync(c => c.Name == "Study Tables & Furniture");
 
-            if (!await context.Products.AnyAsync())
+            bool sampleProductsExist = await context.Products.AnyAsync(p => p.Title == "Casio FX-991EX ClassWiz Scientific Calculator");
+            if (!sampleProductsExist)
             {
                 var sampleProducts = new List<Product>
                 {
@@ -200,35 +249,6 @@ public static class DbSeeder
                 }
 
                 await context.ProductImages.AddRangeAsync(productImages);
-                await context.SaveChangesAsync();
-            }
-            else
-            {
-                // Update existing sample images to use our crisp generated photos
-                var p1 = await context.Products.FirstOrDefaultAsync(p => p.Title.Contains("Casio"));
-                if (p1 != null)
-                {
-                    var imgs = await context.ProductImages.Where(i => i.ProductId == p1.Id).ToListAsync();
-                    foreach (var img in imgs) img.ImageUrl = "/images/casio_calculator.jpg";
-                }
-                var p2 = await context.Products.FirstOrDefaultAsync(p => p.Title.Contains("Mouse"));
-                if (p2 != null)
-                {
-                    var imgs = await context.ProductImages.Where(i => i.ProductId == p2.Id).ToListAsync();
-                    foreach (var img in imgs) img.ImageUrl = "/images/wireless_mouse.jpg";
-                }
-                var p3 = await context.Products.FirstOrDefaultAsync(p => p.Title.Contains("Mechanics"));
-                if (p3 != null)
-                {
-                    var imgs = await context.ProductImages.Where(i => i.ProductId == p3.Id).ToListAsync();
-                    foreach (var img in imgs) img.ImageUrl = "/images/engineering_book.jpg";
-                }
-                var p4 = await context.Products.FirstOrDefaultAsync(p => p.Title.Contains("Drafter"));
-                if (p4 != null)
-                {
-                    var imgs = await context.ProductImages.Where(i => i.ProductId == p4.Id).ToListAsync();
-                    foreach (var img in imgs) img.ImageUrl = "/images/drafting_kit.jpg";
-                }
                 await context.SaveChangesAsync();
             }
         }

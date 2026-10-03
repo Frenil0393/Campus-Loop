@@ -69,6 +69,17 @@ public class WishlistController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Toggle(int productId, string? returnUrl = null)
     {
+        var product = await _context.Products.FindAsync(productId);
+        if (product == null)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
+                Request.Headers.Accept.ToString().Contains("application/json"))
+            {
+                return Json(new { success = false });
+            }
+            return NotFound();
+        }
+
         var currentUserId = _userManager.GetUserId(User)!;
 
         var existing = await _context.Wishlists
