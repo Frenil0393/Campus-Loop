@@ -42,6 +42,9 @@ builder.Services.AddSignalR();
 // 5. Add Controllers and Views
 builder.Services.AddControllersWithViews();
 
+// 6. Application Services
+builder.Services.AddScoped<CampusLoop.Services.IMarketplaceItemService, CampusLoop.Services.MarketplaceItemService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

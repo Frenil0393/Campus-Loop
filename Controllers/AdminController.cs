@@ -108,6 +108,14 @@ public class AdminController : Controller
         var product = await _context.Products.FindAsync(id);
         if (product == null) return NotFound();
 
+        // If the product has an order, do not delete it
+        var hasOrder = await _context.Orders.AnyAsync(o => o.ProductId == id);
+        if (hasOrder)
+        {
+            TempData["ErrorMessage"] = "This item has a purchase record and cannot be deleted.";
+            return RedirectToAction(nameof(Products));
+        }
+
         // Delete associated records
         var images = await _context.ProductImages.Where(i => i.ProductId == id).ToListAsync();
         _context.ProductImages.RemoveRange(images);

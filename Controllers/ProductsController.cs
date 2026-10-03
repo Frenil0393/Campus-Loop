@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CampusLoop.Data;
 using CampusLoop.Models;
+using CampusLoop.Services;
 using CampusLoop.ViewModels;
 
 namespace CampusLoop.Controllers;
@@ -15,15 +16,18 @@ public class ProductsController : Controller
     private readonly CampusLoopDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IWebHostEnvironment _environment;
+    private readonly IMarketplaceItemService _marketplaceItemService;
 
     public ProductsController(
         CampusLoopDbContext context,
         UserManager<ApplicationUser> userManager,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IMarketplaceItemService marketplaceItemService)
     {
         _context = context;
         _userManager = userManager;
         _environment = environment;
+        _marketplaceItemService = marketplaceItemService;
     }
 
     // GET: /Products/Details/5 (R.2.2, R.7.1, R.14.2)
@@ -159,25 +163,7 @@ public class ProductsController : Controller
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
-        var productIds = products.Select(p => p.Id).ToList();
-        var images = await _context.ProductImages
-            .Where(img => productIds.Contains(img.ProductId))
-            .ToListAsync();
-
-        var categories = await _context.Categories.ToDictionaryAsync(c => c.Id, c => c.Name);
-
-        var items = products.Select(p => new MarketplaceItemViewModel
-        {
-            Id = p.Id,
-            Title = p.Title,
-            Price = p.Price,
-            CategoryName = categories.TryGetValue(p.CategoryId, out var name) ? name : "General",
-            PrimaryImageUrl = images.FirstOrDefault(i => i.ProductId == p.Id && i.IsPrimary)?.ImageUrl
-                ?? images.FirstOrDefault(i => i.ProductId == p.Id)?.ImageUrl
-                ?? "/images/placeholder.png",
-            Status = p.Status,
-            CreatedAt = p.CreatedAt
-        }).ToList();
+        var items = await _marketplaceItemService.BuildViewModelsAsync(products, currentUserId);
 
         return View(items);
     }
@@ -297,6 +283,14 @@ public class ProductsController : Controller
 
         if (product == null) return NotFound();
         if (product.SellerId != currentUserId) return Forbid(); // Ownership check
+
+        // If the product has an order, do not delete it
+        var hasOrder = await _context.Orders.AnyAsync(o => o.ProductId == id);
+        if (hasOrder)
+        {
+            TempData["ErrorMessage"] = "This item has a purchase record and cannot be deleted.";
+            return RedirectToAction(nameof(MyProducts));
+        }
 
         // Remove images
         var images = await _context.ProductImages.Where(img => img.ProductId == id).ToListAsync();

@@ -14,4 +14,12 @@ public class ChatConversation : BaseEntity
     public string SellerId { get; set; } = string.Empty;
 
     public DateTime LastMessageAt { get; set; } = DateTime.UtcNow;
+
+    public Product? Product { get; set; }
+
+    public ApplicationUser? Buyer { get; set; }
+
+    public ApplicationUser? Seller { get; set; }
+
+    public ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
 }

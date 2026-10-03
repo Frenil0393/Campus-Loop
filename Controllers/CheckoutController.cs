@@ -101,7 +101,7 @@ public class CheckoutController : Controller
         }
 
         // Generate college-verified transaction ID
-        var txnId = $"TXN-DDU-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(100000, 999999)}";
+        var txnId = $"TXN-DDU-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid():N}".ToUpperInvariant();
 
         // Determine payment reference for display
         string? reference = model.PaymentMethod switch
@@ -126,12 +126,32 @@ public class CheckoutController : Controller
             CreatedAt = DateTime.UtcNow
         };
 
-        // Mark item as SOLD
-        product.Status = ProductStatus.Sold;
-        product.UpdatedAt = DateTime.UtcNow;
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            var now = DateTime.UtcNow;
+            var rowsUpdated = await _context.Products
+                .Where(p => p.Id == model.ProductId && p.Status == ProductStatus.Available)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(p => p.Status, ProductStatus.Sold)
+                    .SetProperty(p => p.UpdatedAt, now));
 
-        _context.Orders.Add(order);
-        await _context.SaveChangesAsync();
+            if (rowsUpdated == 0)
+            {
+                await transaction.RollbackAsync();
+                TempData["ErrorMessage"] = "This item has already been sold.";
+                return RedirectToAction("Details", "Products", new { id = model.ProductId });
+            }
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
 
         TempData["SuccessMessage"] = $"Payment successful! Transaction ID: {txnId}";
         return RedirectToAction(nameof(Receipt), new { id = order.Id });

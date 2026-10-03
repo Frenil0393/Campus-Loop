@@ -47,4 +47,10 @@ public class Order : BaseEntity
 
     [MaxLength(500)]
     public string? Notes { get; set; }
+
+    public Product? Product { get; set; }
+
+    public ApplicationUser? Buyer { get; set; }
+
+    public ApplicationUser? Seller { get; set; }
 }

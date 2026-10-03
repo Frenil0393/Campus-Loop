@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CampusLoop.Data;
 using CampusLoop.Models;
+using CampusLoop.Services;
 using CampusLoop.ViewModels;
 
 namespace CampusLoop.Controllers;
@@ -13,11 +14,16 @@ public class WishlistController : Controller
 {
     private readonly CampusLoopDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IMarketplaceItemService _marketplaceItemService;
 
-    public WishlistController(CampusLoopDbContext context, UserManager<ApplicationUser> userManager)
+    public WishlistController(
+        CampusLoopDbContext context,
+        UserManager<ApplicationUser> userManager,
+        IMarketplaceItemService marketplaceItemService)
     {
         _context = context;
         _userManager = userManager;
+        _marketplaceItemService = marketplaceItemService;
     }
 
     // GET: /Wishlist (R.5)
@@ -36,30 +42,13 @@ public class WishlistController : Controller
             .Where(p => productIds.Contains(p.Id))
             .ToListAsync();
 
-        var images = await _context.ProductImages
-            .Where(img => productIds.Contains(img.ProductId))
-            .ToListAsync();
+        var productDict = products.ToDictionary(p => p.Id);
+        var orderedProducts = productIds
+            .Where(id => productDict.ContainsKey(id))
+            .Select(id => productDict[id])
+            .ToList();
 
-        var categories = await _context.Categories.ToDictionaryAsync(c => c.Id, c => c.Name);
-        var sellerIds = products.Select(p => p.SellerId).Distinct().ToList();
-        var sellers = await _context.Users
-            .Where(u => sellerIds.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, u => u.FullName);
-
-        var items = products.Select(p => new MarketplaceItemViewModel
-        {
-            Id = p.Id,
-            Title = p.Title,
-            Price = p.Price,
-            CategoryName = categories.TryGetValue(p.CategoryId, out var cName) ? cName : "General",
-            PrimaryImageUrl = images.FirstOrDefault(i => i.ProductId == p.Id && i.IsPrimary)?.ImageUrl
-                ?? images.FirstOrDefault(i => i.ProductId == p.Id)?.ImageUrl
-                ?? "/images/placeholder.png",
-            SellerName = sellers.TryGetValue(p.SellerId, out var sName) ? sName : "Student",
-            Status = p.Status,
-            CreatedAt = p.CreatedAt,
-            IsInWishlist = true
-        }).ToList();
+        var items = await _marketplaceItemService.BuildViewModelsAsync(orderedProducts, currentUserId);
 
         return View(items);
     }

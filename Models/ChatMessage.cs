@@ -16,4 +16,8 @@ public class ChatMessage : BaseEntity
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
 
     public bool IsRead { get; set; } = false;
+
+    public ChatConversation? Conversation { get; set; }
+
+    public ApplicationUser? Sender { get; set; }
 }

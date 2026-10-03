@@ -9,4 +9,8 @@ public class Wishlist : BaseEntity
 
     [Required]
     public int ProductId { get; set; }
+
+    public ApplicationUser? Student { get; set; }
+
+    public Product? Product { get; set; }
 }
