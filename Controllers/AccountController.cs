@@ -13,15 +13,18 @@ public class AccountController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly CampusLoopDbContext _context;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        CampusLoopDbContext context)
+        CampusLoopDbContext context,
+        RoleManager<IdentityRole> roleManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
+        _roleManager = roleManager;
     }
 
     // GET: /Account/Register (R.1.1)
@@ -79,7 +82,24 @@ public class AccountController : Controller
         if (result.Succeeded)
         {
             // Assign Student role by default
-            await _userManager.AddToRoleAsync(user, Roles.Student);
+            // Make sure the Student role exists
+            if (!await _roleManager.RoleExistsAsync(Roles.Student))
+            {
+                await _roleManager.CreateAsync(new IdentityRole(Roles.Student));
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(user, Roles.Student);
+            if (!roleResult.Succeeded)
+            {
+                // Don't leave a user without a role
+                await _userManager.DeleteAsync(user);
+                foreach (var error in roleResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+
             await _signInManager.SignInAsync(user, isPersistent: false);
             TempData["SuccessMessage"] = "Account created successfully! Welcome to CampusLoop.";
             return RedirectToAction("Index", "Home");

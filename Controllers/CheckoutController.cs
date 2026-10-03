@@ -91,17 +91,24 @@ public class CheckoutController : Controller
             return RedirectToAction("Index", "Home");
         }
 
+        // ----- Check required payment fields -----
+        ValidatePaymentDetails(model);
+
+        if (!ModelState.IsValid)
+        {
+            await FillCheckoutDisplayDataAsync(model, product);
+            return View("Index", model);
+        }
+
         // Generate college-verified transaction ID
         var txnId = $"TXN-DDU-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(100000, 999999)}";
 
         // Determine payment reference for display
         string? reference = model.PaymentMethod switch
         {
-            PaymentMethod.UpiQr => !string.IsNullOrWhiteSpace(model.UpiTransactionRef) ? model.UpiTransactionRef.Trim() : "UPI-QR-Verified",
-            PaymentMethod.UpiId => !string.IsNullOrWhiteSpace(model.UpiId) ? model.UpiId.Trim() : "UPI-Transfer",
-            PaymentMethod.Card => !string.IsNullOrWhiteSpace(model.CardNumber) && model.CardNumber.Length >= 4 
-                ? $"Card ending in {model.CardNumber.Trim()[^4..]}" 
-                : "Card Payment",
+            PaymentMethod.UpiQr => model.UpiTransactionRef!.Trim(),
+            PaymentMethod.UpiId => model.UpiId!.Trim(),
+            PaymentMethod.Card => GetCardReference(model.CardNumber),
             _ => "Cash on Handover"
         };
 
@@ -126,7 +133,7 @@ public class CheckoutController : Controller
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
 
-        TempData["SuccessMessage"] = $"Demo payment successful! Transaction ID: {txnId}";
+        TempData["SuccessMessage"] = $"Payment successful! Transaction ID: {txnId}";
         return RedirectToAction(nameof(Receipt), new { id = order.Id });
     }
 
@@ -210,5 +217,67 @@ public class CheckoutController : Controller
         }).ToList();
 
         return View(items);
+    }
+
+    // ---------- Payment field checks (required fields only) ----------
+    private void ValidatePaymentDetails(CheckoutViewModel model)
+    {
+        switch (model.PaymentMethod)
+        {
+            case PaymentMethod.UpiQr:
+                if (string.IsNullOrWhiteSpace(model.UpiTransactionRef))
+                    ModelState.AddModelError(nameof(model.UpiTransactionRef),
+                        "Please enter the UPI transaction reference.");
+                break;
+
+            case PaymentMethod.UpiId:
+                if (string.IsNullOrWhiteSpace(model.UpiId))
+                    ModelState.AddModelError(nameof(model.UpiId),
+                        "Please enter your UPI ID.");
+                break;
+
+            case PaymentMethod.Card:
+                if (string.IsNullOrWhiteSpace(model.CardHolderName))
+                    ModelState.AddModelError(nameof(model.CardHolderName), "Please enter the card holder name.");
+
+                if (string.IsNullOrWhiteSpace(model.CardNumber))
+                    ModelState.AddModelError(nameof(model.CardNumber), "Please enter the card number.");
+
+                if (string.IsNullOrWhiteSpace(model.CardExpiry))
+                    ModelState.AddModelError(nameof(model.CardExpiry), "Please enter the card expiry date.");
+
+                if (string.IsNullOrWhiteSpace(model.CardCvv))
+                    ModelState.AddModelError(nameof(model.CardCvv), "Please enter the CVV.");
+                break;
+
+                // Cash: nothing to check
+        }
+    }
+
+    private static string GetCardReference(string? cardNumber)
+    {
+        var digits = new string((cardNumber ?? "").Where(char.IsDigit).ToArray());
+        return digits.Length >= 4 ? $"Card ending in {digits[^4..]}" : "Card Payment";
+    }
+
+    // The posted form does not contain product/seller details, so reload them
+    private async Task FillCheckoutDisplayDataAsync(CheckoutViewModel model, Product product)
+    {
+        var category = await _context.Categories.FindAsync(product.CategoryId);
+        var seller = await _userManager.FindByIdAsync(product.SellerId);
+        var primaryImage = await _context.ProductImages
+            .Where(img => img.ProductId == product.Id)
+            .OrderByDescending(img => img.IsPrimary)
+            .Select(img => img.ImageUrl)
+            .FirstOrDefaultAsync() ?? "/images/placeholder.svg";
+
+        model.ProductTitle = product.Title;
+        model.Price = product.Price;
+        model.CategoryName = category?.Name ?? "General";
+        model.ImageUrl = primaryImage;
+        model.SellerId = product.SellerId;
+        model.SellerName = seller?.FullName ?? "DDU Student";
+        model.SellerEmail = seller?.Email ?? "";
+        model.SellerPhone = seller?.PhoneNumber ?? "";
     }
 }
