@@ -13,16 +13,23 @@ public class AdminController : Controller
 {
     private readonly CampusLoopDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ILogger<AdminController> _logger;
 
-    public AdminController(CampusLoopDbContext context, UserManager<ApplicationUser> userManager)
+    public AdminController(
+        CampusLoopDbContext context,
+        UserManager<ApplicationUser> userManager,
+        ILogger<AdminController> logger)
     {
         _context = context;
         _userManager = userManager;
+        _logger = logger;
     }
 
     // GET: /Admin (Dashboard - R.12.1)
     public async Task<IActionResult> Index()
     {
+        _logger.LogInformation("Admin dashboard accessed by {AdminUser}", User.Identity?.Name ?? "Admin");
+
         var totalStudents = await _userManager.GetUsersInRoleAsync(Roles.Student);
         var totalProducts = await _context.Products.CountAsync();
         var availableProducts = await _context.Products.CountAsync(p => p.Status == ProductStatus.Available);
@@ -80,6 +87,9 @@ public class AdminController : Controller
         student.IsActive = !student.IsActive;
         await _userManager.UpdateAsync(student);
 
+        _logger.LogInformation("Admin {AdminUser} toggled student status for {StudentId} ({Email}). Active: {IsActive}",
+            User.Identity?.Name, student.Id, student.Email, student.IsActive);
+
         TempData["SuccessMessage"] = student.IsActive ? "Student account reactivated." : "Student account deactivated.";
         return RedirectToAction(nameof(Students));
     }
@@ -112,6 +122,8 @@ public class AdminController : Controller
         var hasOrder = await _context.Orders.AnyAsync(o => o.ProductId == id);
         if (hasOrder)
         {
+            _logger.LogWarning("Admin {AdminUser} attempted to delete product {ProductId} ({Title}) which has associated orders",
+                User.Identity?.Name, id, product.Title);
             TempData["ErrorMessage"] = "This item has a purchase record and cannot be deleted.";
             return RedirectToAction(nameof(Products));
         }
@@ -131,6 +143,9 @@ public class AdminController : Controller
 
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Admin {AdminUser} removed product {ProductId} ({Title}) from marketplace",
+            User.Identity?.Name, id, product.Title);
 
         TempData["SuccessMessage"] = "Product removed from the marketplace.";
         return RedirectToAction(nameof(Products));
@@ -166,6 +181,7 @@ public class AdminController : Controller
         var exists = await _context.Categories.AnyAsync(c => c.Name.ToLower() == name.Trim().ToLower());
         if (exists)
         {
+            _logger.LogWarning("Admin category creation rejected: '{CategoryName}' already exists", name.Trim());
             TempData["ErrorMessage"] = "A category with this name already exists.";
             return RedirectToAction(nameof(Categories));
         }
@@ -179,6 +195,8 @@ public class AdminController : Controller
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Admin {AdminUser} added category: {CategoryName}", User.Identity?.Name, category.Name);
 
         TempData["SuccessMessage"] = "Category added successfully!";
         return RedirectToAction(nameof(Categories));
@@ -206,9 +224,13 @@ public class AdminController : Controller
             return RedirectToAction(nameof(Categories));
         }
 
+        var oldName = category.Name;
         category.Name = name.Trim();
         category.Description = description?.Trim();
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Admin {AdminUser} updated category {CategoryId} from '{OldName}' to '{NewName}'",
+            User.Identity?.Name, id, oldName, category.Name);
 
         TempData["SuccessMessage"] = "Category updated successfully!";
         return RedirectToAction(nameof(Categories));
@@ -225,12 +247,17 @@ public class AdminController : Controller
         var associatedCount = await _context.Products.CountAsync(p => p.CategoryId == id);
         if (associatedCount > 0)
         {
+            _logger.LogWarning("Admin {AdminUser} attempted to delete category {CategoryId} ({CategoryName}) with {Count} assigned products",
+                User.Identity?.Name, id, category.Name, associatedCount);
             TempData["ErrorMessage"] = $"Cannot delete '{category.Name}' because {associatedCount} product(s) are currently listed under it.";
             return RedirectToAction(nameof(Categories));
         }
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Admin {AdminUser} deleted category {CategoryId} ({CategoryName})",
+            User.Identity?.Name, id, category.Name);
 
         TempData["SuccessMessage"] = "Category deleted successfully!";
         return RedirectToAction(nameof(Categories));

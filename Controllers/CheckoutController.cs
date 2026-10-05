@@ -13,11 +13,16 @@ public class CheckoutController : Controller
 {
     private readonly CampusLoopDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ILogger<CheckoutController> _logger;
 
-    public CheckoutController(CampusLoopDbContext context, UserManager<ApplicationUser> userManager)
+    public CheckoutController(
+        CampusLoopDbContext context,
+        UserManager<ApplicationUser> userManager,
+        ILogger<CheckoutController> logger)
     {
         _context = context;
         _userManager = userManager;
+        _logger = logger;
     }
 
     // GET: /Checkout/Index/5
@@ -28,10 +33,13 @@ public class CheckoutController : Controller
         if (product == null) return NotFound();
 
         var currentUserId = _userManager.GetUserId(User)!;
+        _logger.LogInformation("User {UserId} initiated checkout for Product {ProductId} ({Title})",
+            currentUserId, product.Id, product.Title);
 
         // Prevent seller buying own item
         if (product.SellerId == currentUserId)
         {
+            _logger.LogWarning("Checkout blocked: User {UserId} tried to purchase their own product {ProductId}", currentUserId, id);
             TempData["ErrorMessage"] = "You cannot buy your own product listing.";
             return RedirectToAction("Details", "Products", new { id });
         }
@@ -39,6 +47,7 @@ public class CheckoutController : Controller
         // Prevent buying sold items
         if (product.Status == ProductStatus.Sold)
         {
+            _logger.LogWarning("Checkout blocked: Product {ProductId} is already marked as sold", id);
             TempData["ErrorMessage"] = "This item has already been sold.";
             return RedirectToAction("Details", "Products", new { id });
         }
@@ -81,12 +90,14 @@ public class CheckoutController : Controller
 
         if (product.SellerId == currentUserId)
         {
+            _logger.LogWarning("Payment rejected: User {UserId} cannot buy their own product {ProductId}", currentUserId, model.ProductId);
             TempData["ErrorMessage"] = "You cannot buy your own product listing.";
             return RedirectToAction("Details", "Products", new { id = model.ProductId });
         }
 
         if (product.Status == ProductStatus.Sold)
         {
+            _logger.LogWarning("Payment rejected: Product {ProductId} already sold when User {UserId} submitted checkout", model.ProductId, currentUserId);
             TempData["ErrorMessage"] = "This item has already been marked as sold.";
             return RedirectToAction("Index", "Home");
         }
@@ -96,6 +107,8 @@ public class CheckoutController : Controller
 
         if (!ModelState.IsValid)
         {
+            _logger.LogWarning("Payment validation failed for Product {ProductId}, Method: {PaymentMethod}, Buyer: {BuyerId}",
+                model.ProductId, model.PaymentMethod, currentUserId);
             await FillCheckoutDisplayDataAsync(model, product);
             return View("Index", model);
         }
@@ -139,6 +152,8 @@ public class CheckoutController : Controller
             if (rowsUpdated == 0)
             {
                 await transaction.RollbackAsync();
+                _logger.LogWarning("Concurrent purchase detected: Product {ProductId} was already claimed. Transaction rolled back for User {UserId}",
+                    model.ProductId, currentUserId);
                 TempData["ErrorMessage"] = "This item has already been sold.";
                 return RedirectToAction("Details", "Products", new { id = model.ProductId });
             }
@@ -162,10 +177,15 @@ public class CheckoutController : Controller
             await _context.SaveChangesAsync();
 
             await transaction.CommitAsync();
+
+            _logger.LogInformation("Order created successfully! OrderId: {OrderId}, TxnId: {TxnId}, Amount: {Amount}, Method: {PaymentMethod}, Buyer: {BuyerId}, Seller: {SellerId}",
+                order.Id, txnId, order.Amount, order.PaymentMethod, currentUserId, product.SellerId);
         }
-        catch
+        catch (Exception ex)
         {
             await transaction.RollbackAsync();
+            _logger.LogError(ex, "Transaction failed while processing order for Product {ProductId} by Buyer {BuyerId}",
+                model.ProductId, currentUserId);
             throw;
         }
 
@@ -185,8 +205,11 @@ public class CheckoutController : Controller
         // Security check: Only buyer or seller or admin can view
         if (order.BuyerId != currentUserId && order.SellerId != currentUserId && !User.IsInRole(Roles.Admin))
         {
+            _logger.LogWarning("Unauthorized receipt view attempt for Order {OrderId} by User {UserId}", id, currentUserId);
             return Forbid();
         }
+
+        _logger.LogInformation("Receipt viewed for Order {OrderId} by User {UserId}", id, currentUserId);
 
         var product = await _context.Products.FindAsync(order.ProductId);
         var seller = await _userManager.FindByIdAsync(order.SellerId);

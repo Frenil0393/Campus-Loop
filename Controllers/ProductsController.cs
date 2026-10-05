@@ -17,17 +17,20 @@ public class ProductsController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IWebHostEnvironment _environment;
     private readonly IMarketplaceItemService _marketplaceItemService;
+    private readonly ILogger<ProductsController> _logger;
 
     public ProductsController(
         CampusLoopDbContext context,
         UserManager<ApplicationUser> userManager,
         IWebHostEnvironment environment,
-        IMarketplaceItemService marketplaceItemService)
+        IMarketplaceItemService marketplaceItemService,
+        ILogger<ProductsController> logger)
     {
         _context = context;
         _userManager = userManager;
         _environment = environment;
         _marketplaceItemService = marketplaceItemService;
+        _logger = logger;
     }
 
     // GET: /Products/Details/5 (R.2.2, R.7.1, R.14.2)
@@ -35,7 +38,13 @@ public class ProductsController : Controller
     public async Task<IActionResult> Details(int id)
     {
         var product = await _context.Products.FindAsync(id);
-        if (product == null) return NotFound();
+        if (product == null)
+        {
+            _logger.LogWarning("Product details request for non-existent id: {ProductId}", id);
+            return NotFound();
+        }
+
+        _logger.LogInformation("Product details viewed: {ProductId} ({Title})", product.Id, product.Title);
 
         var category = await _context.Categories.FindAsync(product.CategoryId);
         var seller = await _userManager.FindByIdAsync(product.SellerId);
@@ -92,6 +101,7 @@ public class ProductsController : Controller
         // Enforce 3-4 images requirement from R.3.1 and R.14.1
         if (model.ImageFiles == null || model.ImageFiles.Count < 3 || model.ImageFiles.Count > 4)
         {
+            _logger.LogWarning("Product creation rejected: invalid image count ({Count})", model.ImageFiles?.Count ?? 0);
             ModelState.AddModelError("ImageFiles", "Please upload between 3 and 4 images for the product.");
         }
 
@@ -149,6 +159,9 @@ public class ProductsController : Controller
 
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation("Product created successfully: {ProductId} ({Title}) by Seller {SellerId}",
+            product.Id, product.Title, currentUserId);
+
         TempData["SuccessMessage"] = "Product posted successfully in the marketplace!";
         return RedirectToAction(nameof(MyProducts));
     }
@@ -176,7 +189,12 @@ public class ProductsController : Controller
         var product = await _context.Products.FindAsync(id);
 
         if (product == null) return NotFound();
-        if (product.SellerId != currentUserId) return Forbid(); // Ownership check (R.13.3)
+        if (product.SellerId != currentUserId)
+        {
+            _logger.LogWarning("Forbidden edit attempt: User {UserId} tried to access edit page for Product {ProductId} owned by {SellerId}",
+                currentUserId, id, product.SellerId);
+            return Forbid(); // Ownership check (R.13.3)
+        }
 
         var existingImages = await _context.ProductImages
             .Where(img => img.ProductId == id)
@@ -206,7 +224,12 @@ public class ProductsController : Controller
         var product = await _context.Products.FindAsync(model.Id);
 
         if (product == null) return NotFound();
-        if (product.SellerId != currentUserId) return Forbid();
+        if (product.SellerId != currentUserId)
+        {
+            _logger.LogWarning("Forbidden edit submission: User {UserId} tried to edit Product {ProductId} owned by {SellerId}",
+                currentUserId, model.Id, product.SellerId);
+            return Forbid();
+        }
 
         if (!ModelState.IsValid)
         {
@@ -250,6 +273,9 @@ public class ProductsController : Controller
         }
 
         await _context.SaveChangesAsync();
+        _logger.LogInformation("Product updated successfully: {ProductId} ({Title}) by Seller {SellerId}",
+            product.Id, product.Title, currentUserId);
+
         TempData["SuccessMessage"] = "Product updated successfully!";
         return RedirectToAction(nameof(MyProducts));
     }
@@ -263,11 +289,19 @@ public class ProductsController : Controller
         var product = await _context.Products.FindAsync(id);
 
         if (product == null) return NotFound();
-        if (product.SellerId != currentUserId) return Forbid(); // Ownership check
+        if (product.SellerId != currentUserId)
+        {
+            _logger.LogWarning("Forbidden status change attempt: User {UserId} tried to mark Product {ProductId} owned by {SellerId} as sold",
+                currentUserId, id, product.SellerId);
+            return Forbid();
+        }
 
         product.Status = ProductStatus.Sold;
         product.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Product marked as SOLD: {ProductId} ({Title}) by Seller {SellerId}",
+            id, product.Title, currentUserId);
 
         TempData["SuccessMessage"] = "Product marked as SOLD successfully!";
         return RedirectToAction(nameof(MyProducts));
@@ -282,12 +316,18 @@ public class ProductsController : Controller
         var product = await _context.Products.FindAsync(id);
 
         if (product == null) return NotFound();
-        if (product.SellerId != currentUserId) return Forbid(); // Ownership check
+        if (product.SellerId != currentUserId)
+        {
+            _logger.LogWarning("Forbidden delete attempt: User {UserId} tried to delete Product {ProductId} owned by {SellerId}",
+                currentUserId, id, product.SellerId);
+            return Forbid();
+        }
 
         // If the product has an order, do not delete it
         var hasOrder = await _context.Orders.AnyAsync(o => o.ProductId == id);
         if (hasOrder)
         {
+            _logger.LogWarning("Deletion rejected: Product {ProductId} has an existing order record", id);
             TempData["ErrorMessage"] = "This item has a purchase record and cannot be deleted.";
             return RedirectToAction(nameof(MyProducts));
         }
@@ -309,6 +349,9 @@ public class ProductsController : Controller
 
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Product deleted: {ProductId} ({Title}) by Seller {SellerId}",
+            id, product.Title, currentUserId);
 
         TempData["SuccessMessage"] = "Product deleted successfully.";
         return RedirectToAction(nameof(MyProducts));

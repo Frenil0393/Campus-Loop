@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using CampusLoop.Data;
 using CampusLoop.Models;
 using CampusLoop.ViewModels;
@@ -8,14 +9,19 @@ namespace CampusLoop.Services;
 public class MarketplaceItemService : IMarketplaceItemService
 {
     private readonly CampusLoopDbContext _context;
+    private readonly ILogger<MarketplaceItemService> _logger;
 
-    public MarketplaceItemService(CampusLoopDbContext context)
+    public MarketplaceItemService(CampusLoopDbContext context, ILogger<MarketplaceItemService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<List<MarketplaceItemViewModel>> GetMarketplaceItemsAsync(string? search, int? categoryId, string? sort, string? currentUserId = null)
     {
+        _logger.LogInformation("Querying marketplace items. Search: {Search}, CategoryId: {CategoryId}, Sort: {Sort}, CurrentUserId: {UserId}",
+            search, categoryId, sort, currentUserId);
+
         var query = _context.Products.Where(p => p.Status == ProductStatus.Available);
 
         if (!string.IsNullOrWhiteSpace(search))

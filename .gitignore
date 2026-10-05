@@ -481,3 +481,8 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 wwwroot/uploads/
+
+# Test coverage and runner files
+*.coverage
+*.coveragexml
+coverage.cobertura.xml

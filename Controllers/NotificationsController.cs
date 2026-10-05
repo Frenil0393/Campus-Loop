@@ -12,13 +12,16 @@ public class NotificationsController : Controller
 {
     private readonly CampusLoopDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ILogger<NotificationsController> _logger;
 
     public NotificationsController(
         CampusLoopDbContext context,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        ILogger<NotificationsController> logger)
     {
         _context = context;
         _userManager = userManager;
+        _logger = logger;
     }
 
     // GET: /Notifications
@@ -43,12 +46,18 @@ public class NotificationsController : Controller
         var notification = await _context.Notifications.FindAsync(id);
         if (notification == null) return NotFound();
 
-        if (notification.UserId != currentUserId) return Forbid();
+        if (notification.UserId != currentUserId)
+        {
+            _logger.LogWarning("Forbidden notification access attempt: User {UserId} tried to open Notification {NotificationId} owned by {OwnerId}",
+                currentUserId, id, notification.UserId);
+            return Forbid();
+        }
 
         if (!notification.IsRead)
         {
             notification.IsRead = true;
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Notification {NotificationId} marked as read by User {UserId}", id, currentUserId);
         }
 
         if (!string.IsNullOrEmpty(notification.LinkUrl) && Url.IsLocalUrl(notification.LinkUrl))
@@ -66,9 +75,11 @@ public class NotificationsController : Controller
     {
         var currentUserId = _userManager.GetUserId(User)!;
 
-        await _context.Notifications
+        var count = await _context.Notifications
             .Where(n => n.UserId == currentUserId && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+
+        _logger.LogInformation("User {UserId} marked all {Count} unread notifications as read", currentUserId, count);
 
         return RedirectToAction(nameof(Index));
     }

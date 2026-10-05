@@ -16,15 +16,18 @@ public class ChatController : Controller
     private readonly CampusLoopDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IHubContext<ChatHub> _hubContext;
+    private readonly ILogger<ChatController> _logger;
 
     public ChatController(
         CampusLoopDbContext context,
         UserManager<ApplicationUser> userManager,
-        IHubContext<ChatHub> hubContext)
+        IHubContext<ChatHub> hubContext,
+        ILogger<ChatController> logger)
     {
         _context = context;
         _userManager = userManager;
         _hubContext = hubContext;
+        _logger = logger;
     }
 
     // GET: /Chat (Inbox)
@@ -56,6 +59,7 @@ public class ChatController : Controller
         // Prevent seller chatting with themselves
         if (product.SellerId == currentUserId)
         {
+            _logger.LogWarning("Self-chat attempt blocked: User {UserId} tried to chat on their own listing {ProductId}", currentUserId, productId);
             TempData["ErrorMessage"] = "You cannot initiate a chat on your own listing.";
             return RedirectToAction("Details", "Products", new { id = productId });
         }
@@ -76,6 +80,8 @@ public class ChatController : Controller
             };
             _context.ChatConversations.Add(conversation);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("New chat conversation created: {ConversationId} between Buyer {BuyerId} and Seller {SellerId} for Product {ProductId}",
+                conversation.Id, currentUserId, product.SellerId, productId);
         }
 
         return RedirectToAction(nameof(Conversation), new { id = conversation.Id });
@@ -247,6 +253,9 @@ public class ChatController : Controller
             sentAt = timeFormatted,
             isCurrentUser = false
         });
+
+        _logger.LogInformation("Chat message {MessageId} sent in Conversation {ConversationId} by User {SenderId}",
+            message.Id, conversationId, currentUserId);
 
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
         {

@@ -14,17 +14,20 @@ public class AccountController : Controller
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly CampusLoopDbContext _context;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         CampusLoopDbContext context,
-        RoleManager<IdentityRole> roleManager)
+        RoleManager<IdentityRole> roleManager,
+        ILogger<AccountController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
         _roleManager = roleManager;
+        _logger = logger;
     }
 
     // GET: /Account/Register (R.1.1)
@@ -52,6 +55,7 @@ public class AccountController : Controller
         var email = model.Email.Trim();
         if (!email.EndsWith("@ddu.ac.in", StringComparison.OrdinalIgnoreCase))
         {
+            _logger.LogWarning("Registration attempt rejected: {Email} does not use official @ddu.ac.in domain", model.Email);
             ModelState.AddModelError("Email", "Registration is restricted to DDU students. You must use an official @ddu.ac.in email address.");
             return View(model);
         }
@@ -60,6 +64,7 @@ public class AccountController : Controller
         var existingUser = await _userManager.FindByEmailAsync(model.Email);
         if (existingUser != null)
         {
+            _logger.LogWarning("Registration failed: User with email {Email} already exists", model.Email);
             ModelState.AddModelError("Email", "An account with this college email already exists.");
             return View(model);
         }
@@ -91,6 +96,8 @@ public class AccountController : Controller
             {
                 // Don't leave a user without a role
                 await _userManager.DeleteAsync(user);
+                _logger.LogError("Failed to assign Student role to {Email}: {Errors}", model.Email,
+                    string.Join(", ", roleResult.Errors.Select(e => e.Description)));
                 foreach (var error in roleResult.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
@@ -98,10 +105,16 @@ public class AccountController : Controller
                 return View(model);
             }
 
+            _logger.LogInformation("Student registered successfully: {Email} (Name: {Name}, Branch: {Branch}, Sem: {Semester})",
+                user.Email, user.FullName, user.Branch, user.Semester);
+
             await _signInManager.SignInAsync(user, isPersistent: false);
             TempData["SuccessMessage"] = "Account created successfully! Welcome to CampusLoop.";
             return RedirectToAction("Index", "Home");
         }
+
+        _logger.LogWarning("User creation failed for {Email}: {Errors}", model.Email,
+            string.Join(", ", result.Errors.Select(e => e.Description)));
 
         foreach (var error in result.Errors)
         {
@@ -138,6 +151,7 @@ public class AccountController : Controller
         var loginEmail = model.Email.Trim();
         if (!loginEmail.EndsWith("@ddu.ac.in", StringComparison.OrdinalIgnoreCase))
         {
+            _logger.LogWarning("Login rejected for non-DDU email: {Email}", model.Email);
             ModelState.AddModelError(string.Empty, "Please enter your official @ddu.ac.in college email address.");
             return View(model);
         }
@@ -145,6 +159,7 @@ public class AccountController : Controller
         var user = await _userManager.FindByEmailAsync(model.Email);
         if (user == null || !user.IsActive)
         {
+            _logger.LogWarning("Login failed for {Email}: User not found or inactive", model.Email);
             ModelState.AddModelError(string.Empty, "Invalid email or account is inactive.");
             return View(model);
         }
@@ -152,6 +167,8 @@ public class AccountController : Controller
         var result = await _signInManager.PasswordSignInAsync(user.UserName!, model.Password, model.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
+            _logger.LogInformation("User logged in successfully: {Email}", user.Email);
+
             if (await _userManager.IsInRoleAsync(user, Roles.Admin))
             {
                 return RedirectToAction("Index", "Admin");
@@ -164,6 +181,7 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Home");
         }
 
+        _logger.LogWarning("Invalid password attempt for user {Email}", model.Email);
         ModelState.AddModelError(string.Empty, "Invalid login credentials.");
         return View(model);
     }
@@ -174,7 +192,9 @@ public class AccountController : Controller
     [Authorize]
     public async Task<IActionResult> Logout()
     {
+        var userName = User.Identity?.Name ?? "Unknown";
         await _signInManager.SignOutAsync();
+        _logger.LogInformation("User logged out: {UserName}", userName);
         return RedirectToAction("Login", "Account");
     }
 
@@ -246,15 +266,19 @@ public class AccountController : Controller
             var passResult = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
             if (!passResult.Succeeded)
             {
+                _logger.LogWarning("Password update failed for user {UserId}: {Errors}", user.Id,
+                    string.Join(", ", passResult.Errors.Select(e => e.Description)));
                 foreach (var err in passResult.Errors)
                 {
                     ModelState.AddModelError(string.Empty, err.Description);
                 }
                 return View(model);
             }
+            _logger.LogInformation("Password updated for user {UserId}", user.Id);
         }
 
         await _userManager.UpdateAsync(user);
+        _logger.LogInformation("Profile updated for user {UserId} ({Email})", user.Id, user.Email);
         TempData["SuccessMessage"] = "Profile updated successfully!";
         return RedirectToAction(nameof(Profile));
     }
@@ -274,6 +298,7 @@ public class AccountController : Controller
         // Soft delete / deactivate or remove
         user.IsActive = false;
         await _userManager.UpdateAsync(user);
+        _logger.LogWarning("Account deactivated by user: {UserId} ({Email})", user.Id, user.Email);
 
         TempData["SuccessMessage"] = "Your account has been deleted.";
         return RedirectToAction("Login", "Account");
@@ -282,6 +307,8 @@ public class AccountController : Controller
     // Access Denied
     public IActionResult AccessDenied()
     {
+        var userId = _userManager.GetUserId(User) ?? "Anonymous";
+        _logger.LogWarning("Access Denied for user {UserId} accessing {Path}", userId, Request.Path);
         return View();
     }
 }
